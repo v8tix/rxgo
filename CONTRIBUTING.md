@@ -4,8 +4,9 @@ Contributions are always welcome. However, to make this a smooth collaboration e
 
 ## Branching strategy
 
-* `master` always holds released, working code. It is protected: nobody can push to it directly, force-push it or delete it. Changes only arrive through a pull request from `develop`, and the pull request must pass the CI checks (`audit` and `test` on Ubuntu, macOS and Windows) with all conversations resolved.
+* `master` always holds released, working code.
 * `develop` is the integration branch where new work lands first.
+* Both branches are protected: nobody can push to them directly, force-push them or delete them. Every change arrives through a pull request, which must pass the CI checks (`audit` and `test` on Ubuntu, macOS and Windows) with all conversations resolved.
 * Start a feature or fix from `develop` (`git switch -c feature/<name> develop`), open a pull request into `develop`, and merge it once CI is green.
 * To release, open a pull request from `develop` into `master`. Use **Create a merge commit** (not squash or rebase) so the two branches keep a common history. After it is merged, tag the release on `master`, for example `git tag -a v2.7.0 -m "v2.7.0" && git push origin v2.7.0`.
 * Run `make audit` before opening a pull request.
