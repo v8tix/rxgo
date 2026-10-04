@@ -1,7 +1,7 @@
 # RxGo
 As the creator, I'm resuming my maintainership
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/reactivex/rxgo?style=for-the-badge)](https://goreportcard.com/report/github.com/reactivex/rxgo)
+[![Go Report Card](https://goreportcard.com/badge/github.com/v8tix/rxgo?style=for-the-badge)](https://goreportcard.com/report/github.com/v8tix/rxgo)
 [![Gitter Chat](https://img.shields.io/gitter/room/reactivex/rxgo.svg?style=for-the-badge&color=yellowgreen)](https://gitter.im/reactivex/rxgo)
 [![Maintenance](https://img.shields.io/maintenance/new%20%F0%9F%91%8B/2025?color=blue&style=for-the-badge)](https://github.com/ReactiveX/RxGo/issues/363)
 [![Open Collective](https://img.shields.io/opencollective/sponsors/rxgo?style=for-the-badge&logo=opencollective&color=B7178C)](https://opencollective.com/rxgo)
@@ -41,7 +41,7 @@ The philosophy of RxGo is to implement the ReactiveX concepts and leverage the m
 ## Installation of RxGo v2
 
 ```
-go get -u github.com/reactivex/rxgo/v2
+go get -u github.com/v8tix/rxgo/v2
 ```
 
 ## Getting Started
@@ -417,7 +417,7 @@ An Iterable can be either:
 
 ## Documentation
 
-Package documentation: [https://pkg.go.dev/github.com/reactivex/rxgo/v2](https://pkg.go.dev/github.com/reactivex/rxgo/v2)
+Package documentation: [https://pkg.go.dev/github.com/v8tix/rxgo/v2](https://pkg.go.dev/github.com/v8tix/rxgo/v2)
 
 ### Assert API
 
