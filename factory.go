@@ -4,7 +4,6 @@ import (
 	"context"
 	"math"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -15,8 +14,11 @@ func Amb(observables []Observable, opts ...Option) Observable {
 	ctx := option.buildContext(emptyContext)
 	next := option.buildChannel()
 	once := sync.Once{}
+	wg := sync.WaitGroup{}
+	wg.Add(len(observables))
 
 	f := func(o Observable) {
+		defer wg.Done()
 		it := o.Observe(opts...)
 
 		select {
@@ -28,11 +30,9 @@ func Amb(observables []Observable, opts ...Option) Observable {
 			}
 			once.Do(func() {
 				defer close(next)
-				if item.Error() {
-					next <- item
+				if !item.SendContext(ctx, next) || item.Error() {
 					return
 				}
-				next <- item
 				for {
 					select {
 					case <-ctx.Done():
@@ -41,11 +41,9 @@ func Amb(observables []Observable, opts ...Option) Observable {
 						if !ok {
 							return
 						}
-						if item.Error() {
-							next <- item
+						if !item.SendContext(ctx, next) || item.Error() {
 							return
 						}
-						next <- item
 					}
 				}
 			})
@@ -55,6 +53,12 @@ func Amb(observables []Observable, opts ...Option) Observable {
 	for _, o := range observables {
 		go f(o)
 	}
+
+	// No Observable won: make sure the output terminates instead of blocking its consumers forever.
+	go func() {
+		wg.Wait()
+		once.Do(func() { close(next) })
+	}()
 
 	return &ObservableImpl{
 		iterable: newChannelIterable(next),
@@ -69,15 +73,19 @@ func CombineLatest(f FuncN, observables []Observable, opts ...Option) Observable
 	next := option.buildChannel()
 
 	go func() {
-		size := uint32(len(observables))
-		var counter atomic.Uint32
+		defer close(next)
+		size := len(observables)
 		s := make([]any, size)
+		seen := make([]bool, size)
+		count := 0
 		mutex := sync.Mutex{}
 		wg := sync.WaitGroup{}
-		wg.Add(int(size))
-		errCh := make(chan struct{})
+		wg.Add(size)
 
-		handler := func(ctx context.Context, it Iterable, i int) {
+		ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+
+		handler := func(it Iterable, i int) {
 			defer wg.Done()
 			observe := it.Observe(opts...)
 			for {
@@ -89,37 +97,29 @@ func CombineLatest(f FuncN, observables []Observable, opts ...Option) Observable
 						return
 					}
 					if item.Error() {
-						next <- item
-						errCh <- struct{}{}
+						item.SendContext(ctx, next)
+						cancel()
 						return
 					}
-					if s[i] == nil {
-						counter.Add(1)
-					}
 					mutex.Lock()
+					if !seen[i] {
+						seen[i] = true
+						count++
+					}
 					s[i] = item.V
-					if counter.Load() == size {
-						next <- Of(f(s...))
+					if count == size {
+						Of(f(s...)).SendContext(ctx, next)
 					}
 					mutex.Unlock()
 				}
 			}
 		}
 
-		ctx, cancel := context.WithCancel(ctx)
 		for i, o := range observables {
-			go handler(ctx, o, i)
+			go handler(o, i)
 		}
 
-		go func() {
-			for range errCh {
-				cancel()
-			}
-		}()
-
 		wg.Wait()
-		close(next)
-		close(errCh)
 	}()
 
 	return &ObservableImpl{
@@ -146,11 +146,9 @@ func Concat(observables []Observable, opts ...Option) Observable {
 					if !ok {
 						break loop
 					}
-					if item.Error() {
-						next <- item
+					if !item.SendContext(ctx, next) || item.Error() {
 						return
 					}
-					next <- item
 				}
 			}
 		}

@@ -41,13 +41,13 @@ func TestLeak(t *testing.T) {
 			}, []Observable{
 				Just(1, 2)(),
 				Just(10, 11)(),
-			})
+			}, WithContext(ctx))
 		},
 		"Concat": func(ctx context.Context) Observable {
 			return Concat([]Observable{
 				Just(1, 2, 3)(),
 				Just(4, 5, 6)(),
-			})
+			}, WithContext(ctx))
 		},
 		"FromChannel": func(ctx context.Context) Observable {
 			return FromChannel(getChannel(ctx), WithContext(ctx))
