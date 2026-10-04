@@ -10,9 +10,9 @@ Transform the Observable items into a Single emitting a map. It accepts:
 
 ```go
 observable := rxgo.Just(1, 2, 3)().
-	ToMapWithValueSelector(func(_ context.Context, i interface{}) (interface{}, error) {
+	ToMapWithValueSelector(func(_ context.Context, i any) (any, error) {
 		return i.(int) * 10, nil
-	}, func(_ context.Context, i interface{}) (interface{}, error) {
+	}, func(_ context.Context, i any) (any, error) {
 		return i, nil
 	})
 ```

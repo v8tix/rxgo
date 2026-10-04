@@ -8,7 +8,7 @@ Transform the Observable items into a Single emitting a map. It accepts a functi
 
 ```go
 observable := rxgo.Just(1, 2, 3)().
-	ToMap(func(_ context.Context, i interface{}) (interface{}, error) {
+	ToMap(func(_ context.Context, i any) (any, error) {
 		return i.(int) * 10, nil
 	})
 ```

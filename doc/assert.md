@@ -8,7 +8,7 @@ There is a public API to facilitate writing unit tests while using RxGo. This is
 func TestMap(t *testing.T) {
 	err := errors.New("foo")
 	observable := rxgo.Just(1, 2, 3)().
-		Map(func(_ context.Context, i interface{}) (interface{}, error) {
+		Map(func(_ context.Context, i any) (any, error) {
 			if i == 3 {
 				return nil, err
 			}
@@ -108,7 +108,7 @@ rxgo.Assert(ctx, t, single, rxgo.HasNoError())
 Implement a custom predicate.
 
 ```go
-rxgo.Assert(ctx, t, observable, rxgo.CustomPredicate(func(items []interface{}) error {
+rxgo.Assert(ctx, t, observable, rxgo.CustomPredicate(func(items []any) error {
 	if len(items) != 3 {
 		return errors.New("wrong number of items")
 	}

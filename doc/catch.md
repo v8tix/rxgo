@@ -34,7 +34,7 @@ Output:
 
 ```go
 observable := rxgo.Just(1, errors.New("2"), 3, errors.New("4"), 5)().
-	OnErrorReturn(func(err error) interface{} {
+	OnErrorReturn(func(err error) any {
 		return err.Error()
 	})
 ```

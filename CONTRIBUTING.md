@@ -26,14 +26,21 @@ Try to write idiomatic code according to [Go style guide](https://github.com/gol
 
 Before to create a pull request, make sure to format your code using:
 
-* [gofumpt](https://github.com/mvdan/gofumpt):
-    * Install: `go get mvdan.cc/gofumpt`
-    * Execute: `gofumpt -s -w .`
+* Run `go fix ./...` and `gofmt -s -w .`.
+* Optionally, [gofumpt](https://github.com/mvdan/gofumpt):
+    * Install: `go install mvdan.cc/gofumpt@latest`
+    * Execute: `gofumpt -w .`
 
-* [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports):
-    * Install: `go get golang.o`
-    * Execute: `goimports -w .`
-    
+## Run the tests
+
+The project requires Go 1.27.1 or later. Before opening a pull request, run:
+
+```
+make test
+```
+
+This runs the unit tests with the race detector and the goroutine leak tests. Tests that start goroutines should call `defer goleak.VerifyNone(t)` first and cancel their context with `defer cancel()` (not `t.Context()`, which is only cancelled after the test function returns).
+
 ## Open an issue
 
 This is to encourage discussions and reach a sound design decision before implementing an additional feature or fixing a bug. If you're proposing a new feature, make it obvious in the subject.

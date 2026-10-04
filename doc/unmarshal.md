@@ -2,7 +2,7 @@
 
 ## Overview
 
-Transform the items emitted by an Observable by applying an unmarshaller function (`func([]byte, interface{}) error`) to each item. It takes a factory function that initializes the target structure.
+Transform the items emitted by an Observable by applying an unmarshaller function (`func([]byte, any) error`) to each item. It takes a factory function that initializes the target structure.
 
 ## Example
 
@@ -11,7 +11,7 @@ observable := rxgo.Just(
 	[]byte(`{"id":1}`),
 	[]byte(`{"id":2}`),
 )().Unmarshal(json.Unmarshal,
-	func() interface{} {
+	func() any {
 		return &customer{}
 	})
 ```

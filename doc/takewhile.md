@@ -9,7 +9,7 @@ Mirror items emitted by an Observable until a specified condition becomes false.
 ## Example
 
 ```go
-observable := rxgo.Just(1, 2, 3, 4, 5)().TakeWhile(func(i interface{}) bool {
+observable := rxgo.Just(1, 2, 3, 4, 5)().TakeWhile(func(i any) bool {
 	return i != 3
 })
 ```

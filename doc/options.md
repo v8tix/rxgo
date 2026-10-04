@@ -5,7 +5,7 @@ Most of the operators accept a list of functional options to impact the Observab
 As an example:
 
 ```go
-observable.Map(func(_ context.Context, i interface{}) (interface{}, error) {
+observable.Map(func(_ context.Context, i any) (any, error) {
 	return i.(int) * 10, nil
 }, rxgo.WithContext(),
    rxgo.WithCPUPool(),

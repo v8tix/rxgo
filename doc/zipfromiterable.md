@@ -11,7 +11,7 @@ Merge the emissions of an Iterable via a specified function and emit single item
 ```go
 observable1 := rxgo.Just(1, 2, 3)()
 observable2 := rxgo.Just(10, 20, 30)()
-zipper := func(_ context.Context, i1 interface{}, i2 interface{}) (interface{}, error) {
+zipper := func(_ context.Context, i1 any, i2 any) (any, error) {
 	return i1.(int) + i2.(int), nil
 }
 zippedObservable := observable1.ZipFromIterable(observable2, zipper)

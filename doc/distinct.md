@@ -10,7 +10,7 @@ Suppress duplicate items emitted by an Observable.
 
 ```go
 observable := rxgo.Just(1, 2, 2, 3, 4, 4, 5)().
-	Distinct(func(_ context.Context, i interface{}) (interface{}, error) {
+	Distinct(func(_ context.Context, i any) (any, error) {
 		return i, nil
 	})
 ```

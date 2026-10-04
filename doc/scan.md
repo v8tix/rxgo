@@ -10,7 +10,7 @@ Apply a function to each item emitted by an Observable, sequentially, and emit e
 
 ```go
 observable := rxgo.Just(1, 2, 3, 4, 5)().
-    Scan(func(_ context.Context, acc interface{}, elem interface{}) (interface{}, error) {
+    Scan(func(_ context.Context, acc any, elem any) (any, error) {
         if acc == nil {
             return elem, nil
         }

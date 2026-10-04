@@ -10,7 +10,7 @@ Emit only those items from an Observable that pass a predicate test.
 
 ```go
 observable := rxgo.Just(1, 2, 3)().
-	Filter(func(i interface{}) bool {
+	Filter(func(i any) bool {
 		return i != 2
 	})
 ```

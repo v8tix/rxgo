@@ -1,21 +1,13 @@
 # RxGo
-As the creator, I'm resuming my maintainership
+Fork of [ReactiveX/RxGo](https://github.com/ReactiveX/RxGo), maintained by [V8TIX](https://github.com/v8tix). Licensed under the MIT License; see [LICENSE.md](LICENSE.md) for the original and fork copyright notices. The module path is `github.com/v8tix/rxgo/v2`.
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/v8tix/rxgo?style=for-the-badge)](https://goreportcard.com/report/github.com/v8tix/rxgo)
-[![Gitter Chat](https://img.shields.io/gitter/room/reactivex/rxgo.svg?style=for-the-badge&color=yellowgreen)](https://gitter.im/reactivex/rxgo)
-[![Maintenance](https://img.shields.io/maintenance/new%20%F0%9F%91%8B/2025?color=blue&style=for-the-badge)](https://github.com/ReactiveX/RxGo/issues/363)
-[![Open Collective](https://img.shields.io/opencollective/sponsors/rxgo?style=for-the-badge&logo=opencollective&color=B7178C)](https://opencollective.com/rxgo)
 
 Reactive Extensions for the Go Language.
 
-## Support Us
-
-Learn about our [stories and mission](https://opencollective.com/rxgo).
-All subscribers will receive the original [Otaku Ugly Gopher Decal](https://media2.dev.to/dynamic/image/width=800%2Cheight=%2Cfit=scale-down%2Cgravity=auto%2Cformat=auto/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fi%2F6iaakoij20yua2xa4k94.png).
-
 ## ReactiveX
 
-[ReactiveX](http://reactivex.io/), or Rx for short, is an API for programming with Observable streams. This is the official ReactiveX API for the Go language.
+[ReactiveX](http://reactivex.io/), or Rx for short, is an API for programming with Observable streams. RxGo is a ReactiveX implementation for the Go language.
 
 ReactiveX is a new, alternative way of asynchronous programming to callbacks, promises, and deferred. It is about processing streams of events or items, with events being any occurrences or changes within the system. A stream of events is called an [Observable](http://reactivex.io/documentation/contract.html).
 
@@ -37,6 +29,16 @@ In this example, the final items are sent in a channel, available to a consumer.
 Each operator is a transformation stage. By default, everything is sequential. Yet, we can leverage modern CPU architectures by defining multiple instances of the same operator. Each operator instance being a goroutine connected to a common channel.
 
 The philosophy of RxGo is to implement the ReactiveX concepts and leverage the main Go primitives (channels, goroutines, etc.) so that the integration between the two worlds is as smooth as possible.
+
+## About this fork
+
+This repository continues the development of [ReactiveX/RxGo](https://github.com/ReactiveX/RxGo), originally created by Joe Chasinga and developed by its contributors. Compared to upstream:
+
+* The module path is `github.com/v8tix/rxgo/v2`.
+* It requires Go 1.27.1 or later and uses up-to-date dependencies.
+* The code was modernized (`any`, `sync/atomic` types, etc.). The public API is unchanged, since `any` is an alias of `interface{}`.
+* Goroutine leaks in `Amb`, `Concat` and `CombineLatest` were fixed: they now stop when their context is cancelled, and `Amb` terminates its output when no source emits. A race and a possible panic in `CombineLatest` were fixed as well.
+* Flaky tests were fixed, and the test suite passes with the race detector and shuffled test order.
 
 ## Installation of RxGo v2
 
@@ -82,7 +84,7 @@ By default, an Observable is stopped once an error is produced. However, there a
 It is also possible to consume items using callbacks:
 
 ```go
-observable.ForEach(func(v interface{}) {
+observable.ForEach(func(v any) {
     fmt.Printf("received: %v\n", v)
 }, func(err error) {
     fmt.Printf("error: %e\n", err)
@@ -134,12 +136,12 @@ Yet, let's imagine that all the `Customer` items need to be produced sequentiall
 
 ```go
 observable.
-	Filter(func(item interface{}) bool {
+	Filter(func(item any) bool {
 		// Filter operation
 		customer := item.(Customer)
 		return customer.Age > 18
 	}).
-	Map(func(_ context.Context, item interface{}) (interface{}, error) {
+	Map(func(_ context.Context, item any) (any, error) {
 		// Enrich operation
 		customer := item.(Customer)
 		taxNumber, err := getTaxNumber(customer)
@@ -152,7 +154,7 @@ observable.
 		// Create multiple instances of the map operator
 		rxgo.WithPool(pool),
 		// Serialize the items emitted by their Customer.ID
-		rxgo.Serialize(func(item interface{}) int {
+		rxgo.Serialize(func(item any) int {
 			customer := item.(Customer)
 			return customer.ID
 		}), rxgo.WithBufferedChannel(1))
@@ -310,15 +312,15 @@ observable := rxgo.FromChannel(ch, rxgo.WithPublishStrategy())
 Then, we create two Observers:
 
 ```go
-observable.Map(func(_ context.Context, i interface{}) (interface{}, error) {
+observable.Map(func(_ context.Context, i any) (any, error) {
 	return i.(int) + 1, nil
-}).DoOnNext(func(i interface{}) {
+}).DoOnNext(func(i any) {
 	fmt.Printf("First observer: %d\n", i)
 })
 
-observable.Map(func(_ context.Context, i interface{}) (interface{}, error) {
+observable.Map(func(_ context.Context, i any) (any, error) {
 	return i.(int) * 2, nil
-}).DoOnNext(func(i interface{}) {
+}).DoOnNext(func(i any) {
 	fmt.Printf("Second observer: %d\n", i)
 })
 ```
@@ -347,12 +349,12 @@ go func() {
 observable := rxgo.FromChannel(ch)
 
 // Create the first Observer
-observable.DoOnNext(func(i interface{}) {
+observable.DoOnNext(func(i any) {
 	fmt.Printf("First observer: %d\n", i)
 })
 
 // Create the second Observer
-observable.DoOnNext(func(i interface{}) {
+observable.DoOnNext(func(i any) {
 	fmt.Printf("Second observer: %d\n", i)
 })
 ```
@@ -377,12 +379,12 @@ go func() {
 observable := rxgo.FromChannel(ch, rxgo.WithPublishStrategy())
 
 // Create the first Observer
-observable.DoOnNext(func(i interface{}) {
+observable.DoOnNext(func(i any) {
 	fmt.Printf("First observer: %d\n", i)
 })
 
 // Create the second Observer
-observable.DoOnNext(func(i interface{}) {
+observable.DoOnNext(func(i any) {
 	fmt.Printf("Second observer: %d\n", i)
 })
 
@@ -512,15 +514,7 @@ How to use the [assert API](doc/assert.md) to write unit tests while using RxGo.
 
 ## Contributing
 
-All contributions are very welcome! Be sure you check out the [contributing guidelines](CONTRIBUTING.md) first. Newcomers can take a look at ongoing issues and check for the `help needed` label. 
-
-Also, if you publish a post about RxGo, please let us know. We would be glad to include it in the [External Resources](#external-resources) section.
-
-Thanks to all the people who already contributed to RxGo!
-
-<a href="https://github.com/ReactiveX/RxGo/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=ReactiveX/RxGo" />
-</a>
+Contributions are welcome. Be sure you check out the [contributing guidelines](CONTRIBUTING.md) first, and open an issue or a pull request in this repository.
 
 ## External Resources
 
@@ -534,6 +528,3 @@ Thanks to all the people who already contributed to RxGo!
 * [Go 每日一库之 RxGo (Chinese)](https://darjun.github.io/2020/10/11/godailylib/rxgo/)
 * [RxGo入门 · 语雀 (Chinese)](https://www.yuque.com/yaozj/go/rxgo-get-started?language=en-us)
 
-## Special Thanks
-
-A big thanks to [JetBrains](https://jb.gg/OpenSource) for supporting the project.

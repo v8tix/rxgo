@@ -9,7 +9,7 @@ When an item is emitted by either of two Observables, combine the latest item em
 ## Example
 
 ```go
-observable := rxgo.CombineLatest(func(i ...interface{}) interface{} {
+observable := rxgo.CombineLatest(func(i ...any) any {
 	sum := 0
 	for _, v := range i {
 		if v == nil {

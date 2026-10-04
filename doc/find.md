@@ -7,7 +7,7 @@ Emit the first item passing a predicate then complete.
 ## Example
 
 ```go
-observable := rxgo.Just(1, 2, 3)().Find(func(i interface{}) bool {
+observable := rxgo.Just(1, 2, 3)().Find(func(i any) bool {
     return i == 2
 })
 ```

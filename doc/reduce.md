@@ -10,7 +10,7 @@ Apply a function to each item emitted by an Observable, sequentially, and emit t
 
 ```go
 observable := rxgo.Just(1, 2, 3)().
-	Reduce(func(_ context.Context, acc interface{}, elem interface{}) (interface{}, error) {
+	Reduce(func(_ context.Context, acc any, elem any) (any, error) {
 		if acc == nil {
 			return elem, nil
 		}

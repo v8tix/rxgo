@@ -11,7 +11,7 @@ It returns a `<-chan struct{}` that closes once the Observable terminates.
 ```go
 <-rxgo.Just(1, errors.New("foo"))().
 	ForEach(
-		func(i interface{}) {
+		func(i any) {
 			fmt.Printf("next: %v\n", i)
 		}, func(err error) {
 			fmt.Printf("error: %v\n", err)

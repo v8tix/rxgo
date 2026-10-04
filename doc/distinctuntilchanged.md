@@ -8,7 +8,7 @@ Suppress consecutive duplicate items in the original Observable.
 
 ```go
 observable := rxgo.Just(1, 2, 2, 1, 1, 3)().
-	DistinctUntilChanged(func(_ context.Context, i interface{}) (interface{}, error) {
+	DistinctUntilChanged(func(_ context.Context, i any) (any, error) {
 		return i, nil
 	})
 ```

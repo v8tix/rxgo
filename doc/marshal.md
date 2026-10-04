@@ -2,7 +2,7 @@
 
 ## Overview
 
-Transform the items emitted by an Observable by applying a marshaller function (`func(interface{}) ([]byte, error)`) to each item.
+Transform the items emitted by an Observable by applying a marshaller function (`func(any) ([]byte, error)`) to each item.
 
 ## Example
 

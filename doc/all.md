@@ -10,7 +10,7 @@ Determine whether all items emitted by an Observable meet some criteria.
 
 ```go
 observable := rxgo.Just(1, 2, 3, 4)().
-	All(func(i interface{}) bool {
+	All(func(i any) bool {
 		// Check all items are less than 10
 		return i.(int) < 10
 	})

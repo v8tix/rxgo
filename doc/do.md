@@ -20,7 +20,7 @@ Each one returns a `<-chan struct{}` that closes once the Observable terminates.
 
 ```go
 <-rxgo.Just(1, 2, 3)().
-	DoOnNext(func(i interface{}) {
+	DoOnNext(func(i any) {
 		fmt.Println(i)
 	})
 ```

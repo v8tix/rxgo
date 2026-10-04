@@ -15,8 +15,8 @@ observable := rxgo.Just(
 	map[string]int64{"tt": 1, "V": 1},
 	map[string]int64{"tt": 4, "V": 2},
 	map[string]int64{"tt": 7, "V": 3},
-)().Join(func(ctx context.Context, l interface{}, r interface{}) (interface{}, error) {
-	return map[string]interface{}{
+)().Join(func(ctx context.Context, l any, r any) (any, error) {
+	return map[string]any{
 		"l": l,
 		"r": r,
 	}, nil
@@ -24,7 +24,7 @@ observable := rxgo.Just(
 	map[string]int64{"tt": 2, "V": 5},
 	map[string]int64{"tt": 3, "V": 6},
 	map[string]int64{"tt": 5, "V": 7},
-)(), func(i interface{}) time.Time {
+)(), func(i any) time.Time {
 	return time.Unix(i.(map[string]int64)["tt"], 0)
 }, rxgo.WithDuration(2))
 ```

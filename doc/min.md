@@ -10,7 +10,7 @@ Determine, and emit, the minimum-valued item emitted by an Observable.
 
 ```go
 observable := rxgo.Just(2, 5, 1, 6, 3, 4)().
-	Min(func(i1 interface{}, i2 interface{}) int {
+	Min(func(i1 any, i2 any) int {
 		return i1.(int) - i2.(int)
 	})
 ```
