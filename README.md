@@ -512,10 +512,6 @@ How to use the [assert API](doc/assert.md) to write unit tests while using RxGo.
 * [Errors](doc/errors.md) — return all the errors thrown by an observable
 * [ToMap](doc/tomap.md)/[ToMapWithValueSelector](doc/tomapwithvalueselector.md)/[ToSlice](doc/toslice.md) — convert an Observable into another object or data structure
 
-## Contributing
-
-Contributions are welcome. Open an issue or a pull request in this repository.
-
 ## External Resources
 
 * [Announcing RxGo v2](https://teivah.medium.com/introducing-rxgo-v2-e7e369faa99a)
