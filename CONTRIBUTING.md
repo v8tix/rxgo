@@ -2,6 +2,14 @@
 
 Contributions are always welcome. However, to make this a smooth collaboration experience for everyone and to maintain the quality of the code, here is a few things to consider before and after making a pull request:
 
+## Branching strategy
+
+* `master` always holds released, working code. It is protected: nobody can push to it directly, force-push it or delete it. Changes only arrive through a pull request from `develop`, and the pull request must pass the CI checks (`audit` and `test` on Ubuntu, macOS and Windows) with all conversations resolved.
+* `develop` is the integration branch where new work lands first.
+* Start a feature or fix from `develop` (`git switch -c feature/<name> develop`), open a pull request into `develop`, and merge it once CI is green.
+* To release, open a pull request from `develop` into `master`. Use **Create a merge commit** (not squash or rebase) so the two branches keep a common history. After it is merged, tag the release on `master`, for example `git tag -a v2.7.0 -m "v2.7.0" && git push origin v2.7.0`.
+* Run `make audit` before opening a pull request.
+
 ## Consistency
 
 There are already +80 operators and +250 unit tests. Please don't try necessarily to reinvent the wheel and make sure to check first how the current implementation solves the most common problems.
