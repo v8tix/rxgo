@@ -514,7 +514,7 @@ How to use the [assert API](doc/assert.md) to write unit tests while using RxGo.
 
 ## Contributing
 
-Contributions are welcome. Be sure you check out the [contributing guidelines](CONTRIBUTING.md) first, and open an issue or a pull request in this repository.
+Contributions are welcome. Open an issue or a pull request in this repository.
 
 ## External Resources
 
