@@ -405,7 +405,7 @@ func (o *ObservableImpl) BufferWithCount(count int, opts ...Option) Observable {
 	return observable(o.parent, o, func() operator {
 		return &bufferWithCountOperator{
 			count:  count,
-			buffer: make([]interface{}, count),
+			buffer: make([]any, count),
 		}
 	}, true, false, opts...)
 }
@@ -413,7 +413,7 @@ func (o *ObservableImpl) BufferWithCount(count int, opts ...Option) Observable {
 type bufferWithCountOperator struct {
 	count  int
 	iCount int
-	buffer []interface{}
+	buffer []any
 }
 
 func (op *bufferWithCountOperator) next(ctx context.Context, item Item, dst chan<- Item, _ operatorOptions) {
@@ -422,7 +422,7 @@ func (op *bufferWithCountOperator) next(ctx context.Context, item Item, dst chan
 	if op.iCount == op.count {
 		Of(op.buffer).SendContext(ctx, dst)
 		op.iCount = 0
-		op.buffer = make([]interface{}, op.count)
+		op.buffer = make([]any, op.count)
 	}
 }
 
@@ -451,7 +451,7 @@ func (o *ObservableImpl) BufferWithTime(timespan Duration, opts ...Option) Obser
 
 	f := func(ctx context.Context, next chan Item, option Option, opts ...Option) {
 		observe := o.Observe(opts...)
-		buffer := make([]interface{}, 0)
+		buffer := make([]any, 0)
 		stop := make(chan struct{})
 		mutex := sync.Mutex{}
 
@@ -462,7 +462,7 @@ func (o *ObservableImpl) BufferWithTime(timespan Duration, opts ...Option) Obser
 					mutex.Unlock()
 					return
 				}
-				buffer = make([]interface{}, 0)
+				buffer = make([]any, 0)
 			}
 			mutex.Unlock()
 		}
@@ -523,7 +523,7 @@ func (o *ObservableImpl) BufferWithTimeOrCount(timespan Duration, count int, opt
 
 	f := func(ctx context.Context, next chan Item, option Option, opts ...Option) {
 		observe := o.Observe(opts...)
-		buffer := make([]interface{}, 0)
+		buffer := make([]any, 0)
 		stop := make(chan struct{})
 		send := make(chan struct{})
 		mutex := sync.Mutex{}
@@ -535,7 +535,7 @@ func (o *ObservableImpl) BufferWithTimeOrCount(timespan Duration, count int, opt
 					mutex.Unlock()
 					return
 				}
-				buffer = make([]interface{}, 0)
+				buffer = make([]any, 0)
 			}
 			mutex.Unlock()
 		}
@@ -671,7 +671,7 @@ func (o *ObservableImpl) Debounce(timespan Duration, opts ...Option) Observable 
 	f := func(ctx context.Context, next chan Item, option Option, opts ...Option) {
 		defer close(next)
 		observe := o.Observe(opts...)
-		var latest interface{}
+		var latest any
 
 		for {
 			select {
@@ -707,7 +707,7 @@ func (o *ObservableImpl) Debounce(timespan Duration, opts ...Option) Observable 
 
 // DefaultIfEmpty returns an Observable that emits the items emitted by the source
 // Observable or a specified default item if the source Observable is empty.
-func (o *ObservableImpl) DefaultIfEmpty(defaultValue interface{}, opts ...Option) Observable {
+func (o *ObservableImpl) DefaultIfEmpty(defaultValue any, opts ...Option) Observable {
 	return observable(o.parent, o, func() operator {
 		return &defaultIfEmptyOperator{
 			defaultValue: defaultValue,
@@ -717,7 +717,7 @@ func (o *ObservableImpl) DefaultIfEmpty(defaultValue interface{}, opts ...Option
 }
 
 type defaultIfEmptyOperator struct {
-	defaultValue interface{}
+	defaultValue any
 	empty        bool
 }
 
@@ -745,14 +745,14 @@ func (o *ObservableImpl) Distinct(apply Func, opts ...Option) Observable {
 	return observable(o.parent, o, func() operator {
 		return &distinctOperator{
 			apply:  apply,
-			keyset: make(map[interface{}]interface{}),
+			keyset: make(map[any]any),
 		}
 	}, false, false, opts...)
 }
 
 type distinctOperator struct {
 	apply  Func
-	keyset map[interface{}]interface{}
+	keyset map[any]any
 }
 
 func (op *distinctOperator) next(ctx context.Context, item Item, dst chan<- Item, operatorOptions operatorOptions) {
@@ -800,7 +800,7 @@ func (o *ObservableImpl) DistinctUntilChanged(apply Func, opts ...Option) Observ
 
 type distinctUntilChangedOperator struct {
 	apply   Func
-	current interface{}
+	current any
 }
 
 func (op *distinctUntilChangedOperator) next(ctx context.Context, item Item, dst chan<- Item, operatorOptions operatorOptions) {
@@ -1076,7 +1076,7 @@ func (op *firstOperator) gatherNext(_ context.Context, _ Item, _ chan<- Item, _ 
 // FirstOrDefault returns new Observable which emit only first item.
 // If the observable fails to emit any items, it emits a default value.
 // Cannot be run in parallel.
-func (o *ObservableImpl) FirstOrDefault(defaultValue interface{}, opts ...Option) Single {
+func (o *ObservableImpl) FirstOrDefault(defaultValue any, opts ...Option) Single {
 	return single(o.parent, o, func() operator {
 		return &firstOrDefaultOperator{
 			defaultValue: defaultValue,
@@ -1085,7 +1085,7 @@ func (o *ObservableImpl) FirstOrDefault(defaultValue interface{}, opts ...Option
 }
 
 type firstOrDefaultOperator struct {
-	defaultValue interface{}
+	defaultValue any
 	sent         bool
 }
 
@@ -1214,7 +1214,7 @@ func abs(n int64) int64 {
 // Join combines items emitted by two Observables whenever an item from one Observable is emitted during
 // a time window defined according to an item emitted by the other Observable.
 // The time is extracted using a timeExtractor function.
-func (o *ObservableImpl) Join(joiner Func2, right Observable, timeExtractor func(interface{}) time.Time, window Duration, opts ...Option) Observable {
+func (o *ObservableImpl) Join(joiner Func2, right Observable, timeExtractor func(any) time.Time, window Duration, opts ...Option) Observable {
 	f := func(ctx context.Context, next chan Item, option Option, opts ...Option) {
 		defer close(next)
 		windowDuration := int64(window.duration())
@@ -1308,7 +1308,7 @@ func (o *ObservableImpl) GroupBy(length int, distribution func(Item) int, opts .
 
 	s := make([]Item, length)
 	chs := make([]chan Item, length)
-	for i := 0; i < length; i++ {
+	for i := range length {
 		ch := option.buildChannel()
 		chs[i] = ch
 		s[i] = Of(&ObservableImpl{
@@ -1319,7 +1319,7 @@ func (o *ObservableImpl) GroupBy(length int, distribution func(Item) int, opts .
 	go func() {
 		observe := o.Observe(opts...)
 		defer func() {
-			for i := 0; i < length; i++ {
+			for i := range length {
 				close(chs[i])
 			}
 		}()
@@ -1335,7 +1335,7 @@ func (o *ObservableImpl) GroupBy(length int, distribution func(Item) int, opts .
 				idx := distribution(item)
 				if idx >= length {
 					err := Error(IndexOutOfBoundError{error: fmt.Sprintf("index %d, length %d", idx, length)})
-					for i := 0; i < length; i++ {
+					for i := range length {
 						err.SendContext(ctx, chs[i])
 					}
 					return
@@ -1437,7 +1437,7 @@ func (op *lastOperator) gatherNext(_ context.Context, _ Item, _ chan<- Item, _ o
 // LastOrDefault returns a new Observable which emit only last item.
 // If the observable fails to emit any items, it emits a default value.
 // Cannot be run in parallel.
-func (o *ObservableImpl) LastOrDefault(defaultValue interface{}, opts ...Option) Single {
+func (o *ObservableImpl) LastOrDefault(defaultValue any, opts ...Option) Single {
 	return single(o.parent, o, func() operator {
 		return &lastOrDefaultOperator{
 			defaultValue: defaultValue,
@@ -1447,7 +1447,7 @@ func (o *ObservableImpl) LastOrDefault(defaultValue interface{}, opts ...Option)
 }
 
 type lastOrDefaultOperator struct {
-	defaultValue interface{}
+	defaultValue any
 	last         Item
 	empty        bool
 }
@@ -1510,7 +1510,7 @@ func (op *mapOperator) gatherNext(ctx context.Context, item Item, dst chan<- Ite
 
 // Marshal transforms the items emitted by an Observable by applying a marshalling to each item.
 func (o *ObservableImpl) Marshal(marshaller Marshaller, opts ...Option) Observable {
-	return o.Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	return o.Map(func(_ context.Context, i any) (any, error) {
 		return marshaller(i)
 	}, opts...)
 }
@@ -1528,7 +1528,7 @@ func (o *ObservableImpl) Max(comparator Comparator, opts ...Option) OptionalSing
 type maxOperator struct {
 	comparator Comparator
 	empty      bool
-	max        interface{}
+	max        any
 }
 
 func (op *maxOperator) next(_ context.Context, item Item, _ chan<- Item, _ operatorOptions) {
@@ -1570,7 +1570,7 @@ func (o *ObservableImpl) Min(comparator Comparator, opts ...Option) OptionalSing
 type minOperator struct {
 	comparator Comparator
 	empty      bool
-	max        interface{}
+	max        any
 }
 
 func (op *minOperator) next(_ context.Context, item Item, _ chan<- Item, _ operatorOptions) {
@@ -1657,14 +1657,14 @@ func (op *onErrorReturnOperator) gatherNext(_ context.Context, _ Item, _ chan<- 
 }
 
 // OnErrorReturnItem instructs on Observable to emit an item if it encounters an error.
-func (o *ObservableImpl) OnErrorReturnItem(resume interface{}, opts ...Option) Observable {
+func (o *ObservableImpl) OnErrorReturnItem(resume any, opts ...Option) Observable {
 	return observable(o.parent, o, func() operator {
 		return &onErrorReturnItemOperator{resume: resume}
 	}, true, false, opts...)
 }
 
 type onErrorReturnItemOperator struct {
-	resume interface{}
+	resume any
 }
 
 func (op *onErrorReturnItemOperator) next(ctx context.Context, item Item, dst chan<- Item, _ operatorOptions) {
@@ -1693,7 +1693,7 @@ func (o *ObservableImpl) Reduce(apply Func2, opts ...Option) OptionalSingle {
 
 type reduceOperator struct {
 	apply Func2
-	acc   interface{}
+	acc   any
 	empty bool
 }
 
@@ -1931,7 +1931,7 @@ func (o *ObservableImpl) Scan(apply Func2, opts ...Option) Observable {
 
 type scanOperator struct {
 	apply   Func2
-	current interface{}
+	current any
 }
 
 func (op *scanOperator) next(ctx context.Context, item Item, dst chan<- Item, operatorOptions operatorOptions) {
@@ -1958,8 +1958,8 @@ func (op *scanOperator) gatherNext(_ context.Context, _ Item, _ chan<- Item, _ o
 // Compares first items of two sequences and returns true if they are equal and false if
 // they are not. Besides, it returns two new sequences - input sequences without compared items.
 func popAndCompareFirstItems(
-	inputSequence1 []interface{},
-	inputSequence2 []interface{}) (bool, []interface{}, []interface{}) {
+	inputSequence1 []any,
+	inputSequence2 []any) (bool, []any, []any) {
 	if len(inputSequence1) > 0 && len(inputSequence2) > 0 {
 		s1, sequence1 := inputSequence1[0], inputSequence1[1:]
 		s2, sequence2 := inputSequence2[0], inputSequence2[1:]
@@ -2036,8 +2036,8 @@ func (o *ObservableImpl) SequenceEqual(iterable Iterable, opts ...Option) Single
 	}()
 
 	go func() {
-		var mainSequence []interface{}
-		var obsSequence []interface{}
+		var mainSequence []any
+		var obsSequence []any
 		areCorrect := true
 		isMainChannelClosed := false
 		isObsChannelClosed := false
@@ -2076,16 +2076,16 @@ func (o *ObservableImpl) SequenceEqual(iterable Iterable, opts ...Option) Single
 }
 
 // Serialize forces an Observable to make serialized calls and to be well-behaved.
-func (o *ObservableImpl) Serialize(from int, identifier func(interface{}) int, opts ...Option) Observable {
+func (o *ObservableImpl) Serialize(from int, identifier func(any) int, opts ...Option) Observable {
 	option := parseOptions(opts...)
 	next := option.buildChannel()
 
 	ctx := option.buildContext(o.parent)
-	minHeap := binaryheap.NewWith(func(a, b interface{}) int {
+	minHeap := binaryheap.NewWith(func(a, b any) int {
 		return a.(int) - b.(int)
 	})
 	counter := int64(from)
-	items := make(map[int]interface{})
+	items := make(map[int]any)
 
 	go func() {
 		src := o.Observe(opts...)
@@ -2288,7 +2288,7 @@ func (o *ObservableImpl) StartWith(iterable Iterable, opts ...Option) Observable
 
 // SumFloat32 calculates the average of float32 emitted by an Observable and emits a float32.
 func (o *ObservableImpl) SumFloat32(opts ...Option) OptionalSingle {
-	return o.Reduce(func(_ context.Context, acc, elem interface{}) (interface{}, error) {
+	return o.Reduce(func(_ context.Context, acc, elem any) (any, error) {
 		if acc == nil {
 			acc = float32(0)
 		}
@@ -2314,7 +2314,7 @@ func (o *ObservableImpl) SumFloat32(opts ...Option) OptionalSingle {
 
 // SumFloat64 calculates the average of float64 emitted by an Observable and emits a float64.
 func (o *ObservableImpl) SumFloat64(opts ...Option) OptionalSingle {
-	return o.Reduce(func(_ context.Context, acc, elem interface{}) (interface{}, error) {
+	return o.Reduce(func(_ context.Context, acc, elem any) (any, error) {
 		if acc == nil {
 			acc = float64(0)
 		}
@@ -2342,7 +2342,7 @@ func (o *ObservableImpl) SumFloat64(opts ...Option) OptionalSingle {
 
 // SumInt64 calculates the average of integers emitted by an Observable and emits an int64.
 func (o *ObservableImpl) SumInt64(opts ...Option) OptionalSingle {
-	return o.Reduce(func(_ context.Context, acc, elem interface{}) (interface{}, error) {
+	return o.Reduce(func(_ context.Context, acc, elem any) (any, error) {
 		if acc == nil {
 			acc = int64(0)
 		}
@@ -2582,14 +2582,14 @@ func (o *ObservableImpl) ToMap(keySelector Func, opts ...Option) Single {
 	return single(o.parent, o, func() operator {
 		return &toMapOperator{
 			keySelector: keySelector,
-			m:           make(map[interface{}]interface{}),
+			m:           make(map[any]any),
 		}
 	}, true, false, opts...)
 }
 
 type toMapOperator struct {
 	keySelector Func
-	m           map[interface{}]interface{}
+	m           map[any]any
 }
 
 func (op *toMapOperator) next(ctx context.Context, item Item, dst chan<- Item, operatorOptions operatorOptions) {
@@ -2622,14 +2622,14 @@ func (o *ObservableImpl) ToMapWithValueSelector(keySelector, valueSelector Func,
 		return &toMapWithValueSelector{
 			keySelector:   keySelector,
 			valueSelector: valueSelector,
-			m:             make(map[interface{}]interface{}),
+			m:             make(map[any]any),
 		}
 	}, true, false, opts...)
 }
 
 type toMapWithValueSelector struct {
 	keySelector, valueSelector Func
-	m                          map[interface{}]interface{}
+	m                          map[any]any
 }
 
 func (op *toMapWithValueSelector) next(ctx context.Context, item Item, dst chan<- Item, operatorOptions operatorOptions) {
@@ -2663,9 +2663,9 @@ func (op *toMapWithValueSelector) gatherNext(_ context.Context, _ Item, _ chan<-
 
 // ToSlice collects all items from an Observable and emit them in a slice and an optional error.
 // Cannot be run in parallel.
-func (o *ObservableImpl) ToSlice(initialCapacity int, opts ...Option) ([]interface{}, error) {
+func (o *ObservableImpl) ToSlice(initialCapacity int, opts ...Option) ([]any, error) {
 	op := &toSliceOperator{
-		s: make([]interface{}, 0, initialCapacity),
+		s: make([]any, 0, initialCapacity),
 	}
 	<-observable(o.parent, o, func() operator {
 		return op
@@ -2674,7 +2674,7 @@ func (o *ObservableImpl) ToSlice(initialCapacity int, opts ...Option) ([]interfa
 }
 
 type toSliceOperator struct {
-	s             []interface{}
+	s             []any
 	observableErr error
 }
 
@@ -2694,8 +2694,8 @@ func (op *toSliceOperator) gatherNext(_ context.Context, _ Item, _ chan<- Item, 
 }
 
 // Unmarshal transforms the items emitted by an Observable by applying an unmarshalling to each item.
-func (o *ObservableImpl) Unmarshal(unmarshaller Unmarshaller, factory func() interface{}, opts ...Option) Observable {
-	return o.Map(func(_ context.Context, i interface{}) (interface{}, error) {
+func (o *ObservableImpl) Unmarshal(unmarshaller Unmarshaller, factory func() any, opts ...Option) Observable {
+	return o.Map(func(_ context.Context, i any) (any, error) {
 		v := factory()
 		err := unmarshaller(i.([]byte), v)
 		if err != nil {

@@ -10,8 +10,8 @@ import (
 	"go.uber.org/goleak"
 )
 
-func collect(ctx context.Context, ch <-chan Item) ([]interface{}, error) {
-	s := make([]interface{}, 0)
+func collect(ctx context.Context, ch <-chan Item) ([]any, error) {
+	s := make([]any, 0)
 	for {
 		select {
 		case <-ctx.Done():
@@ -49,7 +49,7 @@ func Test_CombineLatest(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := CombineLatest(func(ii ...interface{}) interface{} {
+	obs := CombineLatest(func(ii ...any) any {
 		sum := 0
 		for _, v := range ii {
 			if v == nil {
@@ -66,7 +66,7 @@ func Test_CombineLatest_Empty(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := CombineLatest(func(ii ...interface{}) interface{} {
+	obs := CombineLatest(func(ii ...any) any {
 		sum := 0
 		for _, v := range ii {
 			sum += v.(int)
@@ -80,7 +80,7 @@ func Test_CombineLatest_Error(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := CombineLatest(func(ii ...interface{}) interface{} {
+	obs := CombineLatest(func(ii ...any) any {
 		sum := 0
 		for _, v := range ii {
 			sum += v.(int)
@@ -231,9 +231,9 @@ func Test_Defer_ComposedDup(t *testing.T) {
 		next <- Of(1)
 		next <- Of(2)
 		next <- Of(3)
-	}}).Map(func(_ context.Context, i interface{}) (_ interface{}, _ error) {
+	}}).Map(func(_ context.Context, i any) (_ any, _ error) {
 		return i.(int) + 1, nil
-	}).Map(func(_ context.Context, i interface{}) (_ interface{}, _ error) {
+	}).Map(func(_ context.Context, i any) (_ any, _ error) {
 		return i.(int) + 1, nil
 	})
 	Assert(context.Background(), t, obs, HasItems(3, 4, 5), HasNoError())
@@ -246,9 +246,9 @@ func Test_Defer_ComposedDup_EagerObservation(t *testing.T) {
 		next <- Of(1)
 		next <- Of(2)
 		next <- Of(3)
-	}}).Map(func(_ context.Context, i interface{}) (_ interface{}, _ error) {
+	}}).Map(func(_ context.Context, i any) (_ any, _ error) {
 		return i.(int) + 1, nil
-	}, WithObservationStrategy(Eager)).Map(func(_ context.Context, i interface{}) (_ interface{}, _ error) {
+	}, WithObservationStrategy(Eager)).Map(func(_ context.Context, i any) (_ any, _ error) {
 		return i.(int) + 1, nil
 	})
 	Assert(context.Background(), t, obs, HasItems(3, 4, 5), HasNoError())
@@ -298,12 +298,12 @@ func Test_FromChannel_ComposedCapacity(t *testing.T) {
 	cancel()
 
 	obs1 := FromChannel(make(chan Item, 10)).
-		Map(func(_ context.Context, _ interface{}) (interface{}, error) {
+		Map(func(_ context.Context, _ any) (any, error) {
 			return 1, nil
 		}, WithContext(ctx), WithBufferedChannel(11))
 	assert.Equal(t, 11, cap(obs1.Observe()))
 
-	obs2 := obs1.Map(func(_ context.Context, _ interface{}) (interface{}, error) {
+	obs2 := obs1.Map(func(_ context.Context, _ any) (any, error) {
 		return 1, nil
 	}, WithContext(ctx), WithBufferedChannel(12))
 	assert.Equal(t, 12, cap(obs2.Observe()))
@@ -316,14 +316,14 @@ func Test_FromEventSource_ObservationAfterAllSent(t *testing.T) {
 	obs := FromEventSource(next, WithBackPressureStrategy(Drop))
 
 	go func() {
-		for i := 0; i < max; i++ {
+		for i := range max {
 			next <- Of(i)
 		}
 		close(next)
 	}()
 	time.Sleep(50 * time.Millisecond)
 
-	Assert(context.Background(), t, obs, CustomPredicate(func(items []interface{}) error {
+	Assert(context.Background(), t, obs, CustomPredicate(func(items []any) error {
 		if len(items) != 0 {
 			return errors.New("items should be nil")
 		}
@@ -338,13 +338,13 @@ func Test_FromEventSource_Drop(t *testing.T) {
 	obs := FromEventSource(next, WithBackPressureStrategy(Drop))
 
 	go func() {
-		for i := 0; i < max; i++ {
+		for i := range max {
 			next <- Of(i)
 		}
 		close(next)
 	}()
 
-	Assert(context.Background(), t, obs, CustomPredicate(func(items []interface{}) error {
+	Assert(context.Background(), t, obs, CustomPredicate(func(items []any) error {
 		if len(items) == max {
 			return errors.New("some items should be dropped")
 		}
@@ -413,12 +413,12 @@ func Test_Just_SimpleCapacity(t *testing.T) {
 
 func Test_Just_ComposedCapacity(t *testing.T) {
 	defer goleak.VerifyNone(t)
-	obs1 := Just(1)().Map(func(_ context.Context, _ interface{}) (interface{}, error) {
+	obs1 := Just(1)().Map(func(_ context.Context, _ any) (any, error) {
 		return 1, nil
 	}, WithBufferedChannel(11))
 	assert.Equal(t, 11, cap(obs1.Observe()))
 
-	obs2 := obs1.Map(func(_ context.Context, _ interface{}) (interface{}, error) {
+	obs2 := obs1.Map(func(_ context.Context, _ any) (any, error) {
 		return 1, nil
 	}, WithBufferedChannel(12))
 	assert.Equal(t, 12, cap(obs2.Observe()))

@@ -32,7 +32,7 @@ func Test_SendItems_Slice(t *testing.T) {
 func Test_SendItems_SliceWithError(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ch := make(chan Item, 3)
-	go SendItems(context.Background(), ch, CloseChannel, []interface{}{1, errFoo, 3})
+	go SendItems(context.Background(), ch, CloseChannel, []any{1, errFoo, 3})
 	Assert(context.Background(), t, FromChannel(ch), HasItems(1, 3), HasError(errFoo))
 }
 

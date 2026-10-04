@@ -8,21 +8,21 @@ import (
 )
 
 // AssertPredicate is a custom predicate based on the items.
-type AssertPredicate func(items []interface{}) error
+type AssertPredicate func(items []any) error
 
 // RxAssert lists the Observable assertions.
 type RxAssert interface {
 	apply(*rxAssert)
-	itemsToBeChecked() (bool, []interface{})
-	itemsNoOrderedToBeChecked() (bool, []interface{})
+	itemsToBeChecked() (bool, []any)
+	itemsNoOrderedToBeChecked() (bool, []any)
 	noItemsToBeChecked() bool
 	someItemsToBeChecked() bool
 	raisedErrorToBeChecked() (bool, error)
 	raisedErrorsToBeChecked() (bool, []error)
 	raisedAnErrorToBeChecked() (bool, error)
 	notRaisedErrorToBeChecked() bool
-	itemToBeChecked() (bool, interface{})
-	noItemToBeChecked() (bool, interface{})
+	itemToBeChecked() (bool, any)
+	noItemToBeChecked() (bool, any)
 	customPredicatesToBeChecked() (bool, []AssertPredicate)
 }
 
@@ -31,9 +31,9 @@ type rxAssert struct {
 	checkHasItems           bool
 	checkHasNoItems         bool
 	checkHasSomeItems       bool
-	items                   []interface{}
+	items                   []any
 	checkHasItemsNoOrder    bool
-	itemsNoOrder            []interface{}
+	itemsNoOrder            []any
 	checkHasRaisedError     bool
 	err                     error
 	checkHasRaisedErrors    bool
@@ -41,7 +41,7 @@ type rxAssert struct {
 	checkHasRaisedAnError   bool
 	checkHasNotRaisedError  bool
 	checkHasItem            bool
-	item                    interface{}
+	item                    any
 	checkHasNoItem          bool
 	checkHasCustomPredicate bool
 	customPredicates        []AssertPredicate
@@ -51,11 +51,11 @@ func (ass *rxAssert) apply(do *rxAssert) {
 	ass.f(do)
 }
 
-func (ass *rxAssert) itemsToBeChecked() (bool, []interface{}) {
+func (ass *rxAssert) itemsToBeChecked() (bool, []any) {
 	return ass.checkHasItems, ass.items
 }
 
-func (ass *rxAssert) itemsNoOrderedToBeChecked() (bool, []interface{}) {
+func (ass *rxAssert) itemsNoOrderedToBeChecked() (bool, []any) {
 	return ass.checkHasItemsNoOrder, ass.itemsNoOrder
 }
 
@@ -83,11 +83,11 @@ func (ass *rxAssert) notRaisedErrorToBeChecked() bool {
 	return ass.checkHasNotRaisedError
 }
 
-func (ass *rxAssert) itemToBeChecked() (bool, interface{}) {
+func (ass *rxAssert) itemToBeChecked() (bool, any) {
 	return ass.checkHasItem, ass.item
 }
 
-func (ass *rxAssert) noItemToBeChecked() (bool, interface{}) {
+func (ass *rxAssert) noItemToBeChecked() (bool, any) {
 	return ass.checkHasNoItem, ass.item
 }
 
@@ -102,7 +102,7 @@ func newAssertion(f func(*rxAssert)) *rxAssert {
 }
 
 // HasItems checks that the observable produces the corresponding items.
-func HasItems(items ...interface{}) RxAssert {
+func HasItems(items ...any) RxAssert {
 	return newAssertion(func(a *rxAssert) {
 		a.checkHasItems = true
 		a.items = items
@@ -110,7 +110,7 @@ func HasItems(items ...interface{}) RxAssert {
 }
 
 // HasItem checks if a single or optional single has a specific item.
-func HasItem(i interface{}) RxAssert {
+func HasItem(i any) RxAssert {
 	return newAssertion(func(a *rxAssert) {
 		a.checkHasItem = true
 		a.item = i
@@ -118,7 +118,7 @@ func HasItem(i interface{}) RxAssert {
 }
 
 // HasItemsNoOrder checks that an observable produces the corresponding items regardless of the order.
-func HasItemsNoOrder(items ...interface{}) RxAssert {
+func HasItemsNoOrder(items ...any) RxAssert {
 	return newAssertion(func(a *rxAssert) {
 		a.checkHasItemsNoOrder = true
 		a.itemsNoOrder = items
@@ -192,7 +192,7 @@ func parseAssertions(assertions ...RxAssert) RxAssert {
 func Assert(ctx context.Context, t *testing.T, iterable Iterable, assertions ...RxAssert) {
 	ass := parseAssertions(assertions...)
 
-	got := make([]interface{}, 0)
+	got := make([]any, 0)
 	errs := make([]error, 0)
 
 	observe := iterable.Observe()
@@ -225,7 +225,7 @@ loop:
 		assert.Equal(t, expectedItems, got)
 	}
 	if checkHasItemsNoOrder, itemsNoOrder := ass.itemsNoOrderedToBeChecked(); checkHasItemsNoOrder {
-		m := make(map[interface{}]interface{})
+		m := make(map[any]any)
 		for _, v := range itemsNoOrder {
 			m[v] = nil
 		}

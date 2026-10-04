@@ -41,13 +41,11 @@ type execution struct {
 	isTick bool
 }
 
-func timeCausality(elems ...interface{}) (context.Context, Observable, Duration) {
+func timeCausality(elems ...any) (context.Context, Observable, Duration) {
 	ch := make(chan Item, 1)
 	fs := make([]execution, len(elems)+1)
 	ctx, cancel := context.WithCancel(context.Background())
 	for i, elem := range elems {
-		i := i
-		elem := elem
 		if elem == tick {
 			fs[i] = execution{
 				f:      func() {},

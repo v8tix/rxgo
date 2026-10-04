@@ -9,14 +9,14 @@ import (
 type (
 	// Item is a wrapper having either a value or an error.
 	Item struct {
-		V interface{}
+		V any
 		E error
 	}
 
 	// TimestampItem attach a timestamp to an item.
 	TimestampItem struct {
 		Timestamp time.Time
-		V         interface{}
+		V         any
 	}
 
 	// CloseChannelStrategy indicates a strategy on whether to close a channel.
@@ -31,7 +31,7 @@ const (
 )
 
 // Of creates an item from a value.
-func Of(i interface{}) Item {
+func Of(i any) Item {
 	return Item{V: i}
 }
 
@@ -42,14 +42,14 @@ func Error(err error) Item {
 
 // SendItems is an utility function that send a list of interface{} and indicate a strategy on whether to close
 // the channel once the function completes.
-func SendItems(ctx context.Context, ch chan<- Item, strategy CloseChannelStrategy, items ...interface{}) {
+func SendItems(ctx context.Context, ch chan<- Item, strategy CloseChannelStrategy, items ...any) {
 	if strategy == CloseChannel {
 		defer close(ch)
 	}
 	send(ctx, ch, items...)
 }
 
-func send(ctx context.Context, ch chan<- Item, items ...interface{}) {
+func send(ctx context.Context, ch chan<- Item, items ...any) {
 	for _, currentItem := range items {
 		switch item := currentItem.(type) {
 		default:

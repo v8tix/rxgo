@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var predicateAllInt = func(i interface{}) bool {
+var predicateAllInt = func(i any) bool {
 	switch i.(type) {
 	case int:
 		return true
@@ -244,7 +244,7 @@ func Test_Observable_BufferWithCount(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, 1, 2, 3, 4, 5, 6).BufferWithCount(3)
-	Assert(ctx, t, obs, HasItems([]interface{}{1, 2, 3}, []interface{}{4, 5, 6}))
+	Assert(ctx, t, obs, HasItems([]any{1, 2, 3}, []any{4, 5, 6}))
 }
 
 func Test_Observable_BufferWithCount_IncompleteLastItem(t *testing.T) {
@@ -252,7 +252,7 @@ func Test_Observable_BufferWithCount_IncompleteLastItem(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, 1, 2, 3, 4).BufferWithCount(3)
-	Assert(ctx, t, obs, HasItems([]interface{}{1, 2, 3}, []interface{}{4}))
+	Assert(ctx, t, obs, HasItems([]any{1, 2, 3}, []any{4}))
 }
 
 func Test_Observable_BufferWithCount_Error(t *testing.T) {
@@ -260,7 +260,7 @@ func Test_Observable_BufferWithCount_Error(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, 1, 2, 3, 4, errFoo).BufferWithCount(3)
-	Assert(ctx, t, obs, HasItems([]interface{}{1, 2, 3}, []interface{}{4}), HasError(errFoo))
+	Assert(ctx, t, obs, HasItems([]any{1, 2, 3}, []any{4}), HasError(errFoo))
 }
 
 func Test_Observable_BufferWithCount_InputError(t *testing.T) {
@@ -277,7 +277,7 @@ func Test_Observable_BufferWithTime_Single(t *testing.T) {
 	defer cancel()
 	obs := Just(1, 2, 3)().BufferWithTime(WithDuration(30 * time.Millisecond))
 	Assert(ctx, t, obs, HasItems(
-		[]interface{}{1, 2, 3},
+		[]any{1, 2, 3},
 	))
 }
 
@@ -289,12 +289,12 @@ func Test_Observable_BufferWithTime_Multiple(t *testing.T) {
 	obs := FromChannel(ch)
 	obs = obs.BufferWithTime(WithDuration(30 * time.Millisecond))
 	go func() {
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			ch <- Of(i)
 		}
 		close(ch)
 	}()
-	Assert(ctx, t, obs, CustomPredicate(func(items []interface{}) error {
+	Assert(ctx, t, obs, CustomPredicate(func(items []any) error {
 		if len(items) == 0 {
 			return errors.New("items should not be nil")
 		}
@@ -310,12 +310,12 @@ func Test_Observable_BufferWithTimeOrCount(t *testing.T) {
 	obs := FromChannel(ch)
 	obs = obs.BufferWithTimeOrCount(WithDuration(30*time.Millisecond), 100)
 	go func() {
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			ch <- Of(i)
 		}
 		close(ch)
 	}()
-	Assert(ctx, t, obs, CustomPredicate(func(items []interface{}) error {
+	Assert(ctx, t, obs, CustomPredicate(func(items []any) error {
 		if len(items) == 0 {
 			return errors.New("items should not be nil")
 		}
@@ -327,7 +327,7 @@ func Test_Observable_Contain(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	predicate := func(i interface{}) bool {
+	predicate := func(i any) bool {
 		switch i := i.(type) {
 		case int:
 			return i == 2
@@ -348,7 +348,7 @@ func Test_Observable_Contain_Parallel(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	predicate := func(i interface{}) bool {
+	predicate := func(i any) bool {
 		switch i := i.(type) {
 		case int:
 			return i == 2
@@ -435,7 +435,7 @@ func Test_Observable_Distinct(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 2, 1, 3).Distinct(func(_ context.Context, item interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 2, 1, 3).Distinct(func(_ context.Context, item any) (any, error) {
 		return item, nil
 	})
 	Assert(ctx, t, obs, HasItems(1, 2, 3), HasNoError())
@@ -445,7 +445,7 @@ func Test_Observable_Distinct_Error(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 2, errFoo, 3).Distinct(func(_ context.Context, item interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 2, errFoo, 3).Distinct(func(_ context.Context, item any) (any, error) {
 		return item, nil
 	})
 	Assert(ctx, t, obs, HasItems(1, 2), HasError(errFoo))
@@ -455,7 +455,7 @@ func Test_Observable_Distinct_Error2(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 2, 2, 3, 4).Distinct(func(_ context.Context, item interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 2, 2, 3, 4).Distinct(func(_ context.Context, item any) (any, error) {
 		if item.(int) == 3 {
 			return nil, errFoo
 		}
@@ -468,7 +468,7 @@ func Test_Observable_Distinct_Parallel(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 2, 1, 3).Distinct(func(_ context.Context, item interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 2, 1, 3).Distinct(func(_ context.Context, item any) (any, error) {
 		return item, nil
 	}, WithCPUPool())
 	Assert(ctx, t, obs, HasItemsNoOrder(1, 2, 3), HasNoError())
@@ -478,7 +478,7 @@ func Test_Observable_Distinct_Parallel_Error(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 2, errFoo).Distinct(func(_ context.Context, item interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 2, errFoo).Distinct(func(_ context.Context, item any) (any, error) {
 		return item, nil
 	}, WithContext(ctx), WithCPUPool())
 	Assert(ctx, t, obs, HasError(errFoo))
@@ -488,7 +488,7 @@ func Test_Observable_Distinct_Parallel_Error2(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 2, 2, 3, 4).Distinct(func(_ context.Context, item interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 2, 2, 3, 4).Distinct(func(_ context.Context, item any) (any, error) {
 		if item.(int) == 3 {
 			return nil, errFoo
 		}
@@ -501,7 +501,7 @@ func Test_Observable_DistinctUntilChanged(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 2, 1, 3).DistinctUntilChanged(func(_ context.Context, item interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 2, 1, 3).DistinctUntilChanged(func(_ context.Context, item any) (any, error) {
 		return item, nil
 	})
 	Assert(ctx, t, obs, HasItems(1, 2, 1, 3))
@@ -511,7 +511,7 @@ func Test_Observable_DistinctUntilChanged_Parallel(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 2, 1, 3).DistinctUntilChanged(func(_ context.Context, item interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 2, 1, 3).DistinctUntilChanged(func(_ context.Context, item any) (any, error) {
 		return item, nil
 	}, WithCPUPool())
 	Assert(ctx, t, obs, HasItems(1, 2, 1, 3))
@@ -565,22 +565,22 @@ func Test_Observable_DoOnNext_NoError(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	s := make([]interface{}, 0)
-	<-testObservable(ctx, 1, 2, 3).DoOnNext(func(i interface{}) {
+	s := make([]any, 0)
+	<-testObservable(ctx, 1, 2, 3).DoOnNext(func(i any) {
 		s = append(s, i)
 	})
-	assert.Equal(t, []interface{}{1, 2, 3}, s)
+	assert.Equal(t, []any{1, 2, 3}, s)
 }
 
 func Test_Observable_DoOnNext_Error(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	s := make([]interface{}, 0)
-	<-testObservable(ctx, 1, errFoo, 3).DoOnNext(func(i interface{}) {
+	s := make([]any, 0)
+	<-testObservable(ctx, 1, errFoo, 3).DoOnNext(func(i any) {
 		s = append(s, i)
 	})
-	assert.Equal(t, []interface{}{1}, s)
+	assert.Equal(t, []any{1}, s)
 }
 
 func Test_Observable_ElementAt(t *testing.T) {
@@ -646,7 +646,7 @@ func Test_Observable_Errors_MultipleErrorFromMap(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	errs := testObservable(ctx, 1, 2, 3, 4).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	errs := testObservable(ctx, 1, 2, 3, 4).Map(func(_ context.Context, i any) (any, error) {
 		if i == 2 {
 			return nil, errFoo
 		}
@@ -663,7 +663,7 @@ func Test_Observable_Filter(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, 1, 2, 3, 4).Filter(
-		func(i interface{}) bool {
+		func(i any) bool {
 			return i.(int)%2 == 0
 		})
 	Assert(ctx, t, obs, HasItems(2, 4), HasNoError())
@@ -674,7 +674,7 @@ func Test_Observable_Filter_Parallel(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, 1, 2, 3, 4).Filter(
-		func(i interface{}) bool {
+		func(i any) bool {
 			return i.(int)%2 == 0
 		}, WithCPUPool())
 	Assert(ctx, t, obs, HasItemsNoOrder(2, 4), HasNoError())
@@ -684,7 +684,7 @@ func Test_Observable_Find_NotEmpty(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 3).Find(func(i interface{}) bool {
+	obs := testObservable(ctx, 1, 2, 3).Find(func(i any) bool {
 		return i == 2
 	})
 	Assert(ctx, t, obs, HasItem(2))
@@ -694,7 +694,7 @@ func Test_Observable_Find_Empty(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := Empty().Find(func(_ interface{}) bool {
+	obs := Empty().Find(func(_ any) bool {
 		return true
 	})
 	Assert(ctx, t, obs, IsEmpty())
@@ -832,7 +832,7 @@ func Test_Observable_ForEach_Error(t *testing.T) {
 	done := make(chan struct{})
 
 	obs := testObservable(ctx, 1, 2, 3, errFoo)
-	obs.ForEach(func(i interface{}) {
+	obs.ForEach(func(i any) {
 		count += i.(int)
 	}, func(err error) {
 		gotErr = err
@@ -864,7 +864,7 @@ func Test_Observable_ForEach_Done(t *testing.T) {
 	done := make(chan struct{})
 
 	obs := testObservable(ctx, 1, 2, 3)
-	obs.ForEach(func(i interface{}) {
+	obs.ForEach(func(i any) {
 		count += i.(int)
 	}, func(err error) {
 		gotErr = err
@@ -988,27 +988,27 @@ func Test_Observable_GroupByDynamic(t *testing.T) {
 	assert.Equal(t, "10", s[3].(GroupedObservable).Key)
 }
 
-func joinTest(ctx context.Context, t *testing.T, left, right []interface{}, window Duration, expected []int64) {
+func joinTest(ctx context.Context, t *testing.T, left, right []any, window Duration, expected []int64) {
 	leftObs := testObservable(ctx, left...)
 	rightObs := testObservable(ctx, right...)
 
-	obs := leftObs.Join(func(ctx context.Context, l, r interface{}) (interface{}, error) {
-		return map[string]interface{}{
+	obs := leftObs.Join(func(ctx context.Context, l, r any) (any, error) {
+		return map[string]any{
 			"l": l,
 			"r": r,
 		}, nil
 	},
 		rightObs,
-		func(i interface{}) time.Time {
+		func(i any) time.Time {
 			return time.Unix(0, i.(map[string]int64)["tt"]*1000000)
 		},
 		window,
 	)
 
-	Assert(ctx, t, obs, CustomPredicate(func(items []interface{}) error {
+	Assert(ctx, t, obs, CustomPredicate(func(items []any) error {
 		actuals := make([]int64, 0)
 		for _, p := range items {
-			val := p.(map[string]interface{})
+			val := p.(map[string]any)
 			actuals = append(actuals, val["l"].(map[string]int64)["V"], val["r"].(map[string]int64)["V"])
 		}
 		assert.Equal(t, expected, actuals)
@@ -1020,12 +1020,12 @@ func Test_Observable_Join1(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	left := []interface{}{
+	left := []any{
 		map[string]int64{"tt": 1, "V": 1},
 		map[string]int64{"tt": 4, "V": 2},
 		map[string]int64{"tt": 7, "V": 3},
 	}
-	right := []interface{}{
+	right := []any{
 		map[string]int64{"tt": 2, "V": 5},
 		map[string]int64{"tt": 3, "V": 6},
 		map[string]int64{"tt": 5, "V": 7},
@@ -1047,13 +1047,13 @@ func Test_Observable_Join2(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	left := []interface{}{
+	left := []any{
 		map[string]int64{"tt": 1, "V": 1},
 		map[string]int64{"tt": 3, "V": 2},
 		map[string]int64{"tt": 5, "V": 3},
 		map[string]int64{"tt": 9, "V": 4},
 	}
-	right := []interface{}{
+	right := []any{
 		map[string]int64{"tt": 2, "V": 1},
 		map[string]int64{"tt": 7, "V": 2},
 		map[string]int64{"tt": 10, "V": 3},
@@ -1074,13 +1074,13 @@ func Test_Observable_Join3(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	left := []interface{}{
+	left := []any{
 		map[string]int64{"tt": 1, "V": 1},
 		map[string]int64{"tt": 2, "V": 2},
 		map[string]int64{"tt": 3, "V": 3},
 		map[string]int64{"tt": 4, "V": 4},
 	}
-	right := []interface{}{
+	right := []any{
 		map[string]int64{"tt": 5, "V": 1},
 		map[string]int64{"tt": 6, "V": 2},
 		map[string]int64{"tt": 7, "V": 3},
@@ -1102,13 +1102,13 @@ func Test_Observable_Join_Error_OnLeft(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	left := []interface{}{
+	left := []any{
 		map[string]int64{"tt": 1, "V": 1},
 		map[string]int64{"tt": 3, "V": 2},
 		errFoo,
 		map[string]int64{"tt": 9, "V": 4},
 	}
-	right := []interface{}{
+	right := []any{
 		map[string]int64{"tt": 2, "V": 1},
 		map[string]int64{"tt": 7, "V": 2},
 		map[string]int64{"tt": 10, "V": 3},
@@ -1126,13 +1126,13 @@ func Test_Observable_Join_Error_OnRight(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	left := []interface{}{
+	left := []any{
 		map[string]int64{"tt": 1, "V": 1},
 		map[string]int64{"tt": 3, "V": 2},
 		map[string]int64{"tt": 5, "V": 3},
 		map[string]int64{"tt": 9, "V": 4},
 	}
-	right := []interface{}{
+	right := []any{
 		map[string]int64{"tt": 2, "V": 1},
 		errFoo,
 		map[string]int64{"tt": 10, "V": 3},
@@ -1213,7 +1213,7 @@ func Test_Observable_Map_One(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 3).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 3).Map(func(_ context.Context, i any) (any, error) {
 		return i.(int) + 1, nil
 	})
 	Assert(ctx, t, obs, HasItems(2, 3, 4), HasNoError())
@@ -1223,9 +1223,9 @@ func Test_Observable_Map_Multiple(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 3).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 3).Map(func(_ context.Context, i any) (any, error) {
 		return i.(int) + 1, nil
-	}).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	}).Map(func(_ context.Context, i any) (any, error) {
 		return i.(int) * 10, nil
 	})
 	Assert(ctx, t, obs, HasItems(20, 30, 40), HasNoError())
@@ -1235,7 +1235,7 @@ func Test_Observable_Map_Error(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 3, errFoo).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 3, errFoo).Map(func(_ context.Context, i any) (any, error) {
 		return i.(int) + 1, nil
 	})
 	Assert(ctx, t, obs, HasItems(2, 3, 4), HasError(errFoo))
@@ -1245,7 +1245,7 @@ func Test_Observable_Map_ReturnValueAndError(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1).Map(func(_ context.Context, i any) (any, error) {
 		return 2, errFoo
 	})
 	Assert(ctx, t, obs, IsEmpty(), HasError(errFoo))
@@ -1256,9 +1256,9 @@ func Test_Observable_Map_Multiple_Error(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	called := false
-	obs := testObservable(ctx, 1, 2, 3).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 3).Map(func(_ context.Context, i any) (any, error) {
 		return nil, errFoo
-	}).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	}).Map(func(_ context.Context, i any) (any, error) {
 		called = true
 		return nil, nil
 	})
@@ -1271,7 +1271,7 @@ func Test_Observable_Map_Cancel(t *testing.T) {
 	next := make(chan Item)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	obs := FromChannel(next).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	obs := FromChannel(next).Map(func(_ context.Context, i any) (any, error) {
 		return i.(int) + 1, nil
 	}, WithContext(ctx))
 	cancel()
@@ -1285,13 +1285,13 @@ func Test_Observable_Map_Parallel(t *testing.T) {
 	const len = 10
 	ch := make(chan Item, len)
 	go func() {
-		for i := 0; i < len; i++ {
+		for i := range len {
 			ch <- Of(i)
 		}
 		close(ch)
 	}()
 
-	obs := FromChannel(ch).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	obs := FromChannel(ch).Map(func(_ context.Context, i any) (any, error) {
 		return i.(int) + 1, nil
 	}, WithPool(len))
 	Assert(ctx, t, obs, HasItemsNoOrder(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), HasNoError())
@@ -1327,7 +1327,7 @@ func Test_Observable_Max(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := Range(0, 10000).Max(func(e1, e2 interface{}) int {
+	obs := Range(0, 10000).Max(func(e1, e2 any) int {
 		i1 := e1.(int)
 		i2 := e2.(int)
 		if i1 > i2 {
@@ -1345,7 +1345,7 @@ func Test_Observable_Max_Parallel(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := Range(0, 10000).Max(func(e1, e2 interface{}) int {
+	obs := Range(0, 10000).Max(func(e1, e2 any) int {
 		var i1 int
 		if e1 == nil {
 			i1 = 0
@@ -1375,7 +1375,7 @@ func Test_Observable_Min(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := Range(0, 10000).Min(func(e1, e2 interface{}) int {
+	obs := Range(0, 10000).Min(func(e1, e2 any) int {
 		i1 := e1.(int)
 		i2 := e2.(int)
 		if i1 > i2 {
@@ -1393,7 +1393,7 @@ func Test_Observable_Min_Parallel(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := Range(0, 10000).Min(func(e1, e2 interface{}) int {
+	obs := Range(0, 10000).Min(func(e1, e2 any) int {
 		i1 := e1.(int)
 		i2 := e2.(int)
 		if i1 > i2 {
@@ -1433,7 +1433,7 @@ func Test_Observable_OnErrorReturn(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, errFoo, 4, errBar, 6).OnErrorReturn(func(err error) interface{} {
+	obs := testObservable(ctx, 1, 2, errFoo, 4, errBar, 6).OnErrorReturn(func(err error) any {
 		return err.Error()
 	})
 	Assert(ctx, t, obs, HasItems(1, 2, "foo", 4, "bar", 6), HasNoError())
@@ -1451,7 +1451,7 @@ func Test_Observable_Reduce(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := Range(1, 10000).Reduce(func(_ context.Context, acc, elem interface{}) (interface{}, error) {
+	obs := Range(1, 10000).Reduce(func(_ context.Context, acc, elem any) (any, error) {
 		if a, ok := acc.(int); ok {
 			if b, ok := elem.(int); ok {
 				return a + b, nil
@@ -1468,7 +1468,7 @@ func Test_Observable_Reduce_Empty(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := Empty().Reduce(func(_ context.Context, acc, elem interface{}) (interface{}, error) {
+	obs := Empty().Reduce(func(_ context.Context, acc, elem any) (any, error) {
 		return 0, nil
 	})
 	Assert(ctx, t, obs, IsEmpty(), HasNoError())
@@ -1478,7 +1478,7 @@ func Test_Observable_Reduce_Error(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, errFoo, 4, 5).Reduce(func(_ context.Context, acc, elem interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, errFoo, 4, 5).Reduce(func(_ context.Context, acc, elem any) (any, error) {
 		return 0, nil
 	})
 	Assert(ctx, t, obs, IsEmpty(), HasError(errFoo))
@@ -1488,7 +1488,7 @@ func Test_Observable_Reduce_ReturnError(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 3).Reduce(func(_ context.Context, acc, elem interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 3).Reduce(func(_ context.Context, acc, elem any) (any, error) {
 		if elem == 2 {
 			return 0, errFoo
 		}
@@ -1501,7 +1501,7 @@ func Test_Observable_Reduce_Parallel(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := Range(1, 10000).Reduce(func(_ context.Context, acc, elem interface{}) (interface{}, error) {
+	obs := Range(1, 10000).Reduce(func(_ context.Context, acc, elem any) (any, error) {
 		if a, ok := acc.(int); ok {
 			if b, ok := elem.(int); ok {
 				return a + b, nil
@@ -1518,7 +1518,7 @@ func Test_Observable_Reduce_Parallel_Error(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := Range(1, 10000).Reduce(func(_ context.Context, acc, elem interface{}) (interface{}, error) {
+	obs := Range(1, 10000).Reduce(func(_ context.Context, acc, elem any) (any, error) {
 		if elem == 1000 {
 			return nil, errFoo
 		}
@@ -1538,7 +1538,7 @@ func Test_Observable_Reduce_Parallel_WithErrorStrategy(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := Range(1, 10000).Reduce(func(_ context.Context, acc, elem interface{}) (interface{}, error) {
+	obs := Range(1, 10000).Reduce(func(_ context.Context, acc, elem any) (any, error) {
 		if elem == 1 {
 			return nil, errFoo
 		}
@@ -1586,7 +1586,7 @@ func Test_Observable_Repeat_Infinite(t *testing.T) {
 		time.Sleep(50 * time.Millisecond)
 		cancel()
 	}()
-	Assert(ctx, t, repeat, HasNoError(), CustomPredicate(func(items []interface{}) error {
+	Assert(ctx, t, repeat, HasNoError(), CustomPredicate(func(items []any) error {
 		if len(items) == 0 {
 			return errors.New("no items")
 		}
@@ -1660,7 +1660,7 @@ func Test_Observable_Run(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	s := make([]int, 0)
-	<-testObservable(ctx, 1, 2, 3).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	<-testObservable(ctx, 1, 2, 3).Map(func(_ context.Context, i any) (any, error) {
 		s = append(s, i.(int))
 		return i, nil
 	}).Run()
@@ -1672,7 +1672,7 @@ func Test_Observable_Run_Error(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	s := make([]int, 0)
-	<-testObservable(ctx, 1, errFoo).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	<-testObservable(ctx, 1, errFoo).Map(func(_ context.Context, i any) (any, error) {
 		s = append(s, i.(int))
 		return i, nil
 	}).Run()
@@ -1691,7 +1691,7 @@ func Test_Observable_Scan(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 3, 4, 5).Scan(func(_ context.Context, x, y interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 3, 4, 5).Scan(func(_ context.Context, x, y any) (any, error) {
 		if x == nil {
 			return y, nil
 		}
@@ -1704,7 +1704,7 @@ func Test_Observable_Scan_Parallel(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 3, 4, 5).Scan(func(_ context.Context, x, y interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 1, 2, 3, 4, 5).Scan(func(_ context.Context, x, y any) (any, error) {
 		if x == nil {
 			return y, nil
 		}
@@ -1774,7 +1774,7 @@ func Test_Observable_Serialize_Struct(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, message{3}, message{5}, message{1}, message{2}, message{4}).
-		Serialize(1, func(i interface{}) int {
+		Serialize(1, func(i any) int {
 			return i.(message).id
 		})
 	Assert(ctx, t, obs, HasItems(message{1}, message{2}, message{3}, message{4}, message{5}))
@@ -1785,7 +1785,7 @@ func Test_Observable_Serialize_Duplicates(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, 1, 3, 2, 6, 4, 5).
-		Serialize(1, func(i interface{}) int {
+		Serialize(1, func(i any) int {
 			return i.(int)
 		})
 	Assert(ctx, t, obs, HasItems(1, 2, 3, 4, 5, 6))
@@ -1795,13 +1795,13 @@ func Test_Observable_Serialize_Loop(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	idx := 0
 	<-Range(1, 10000).
-		Serialize(0, func(i interface{}) int {
+		Serialize(0, func(i any) int {
 			return i.(int)
 		}).
-		Map(func(_ context.Context, i interface{}) (interface{}, error) {
+		Map(func(_ context.Context, i any) (any, error) {
 			return i, nil
 		}, WithCPUPool()).
-		DoOnNext(func(i interface{}) {
+		DoOnNext(func(i any) {
 			v := i.(int)
 			if v != idx {
 				assert.FailNow(t, "not sequential", "expected=%d, got=%d", idx, v)
@@ -1815,7 +1815,7 @@ func Test_Observable_Serialize_DifferentFrom(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, message{13}, message{15}, message{11}, message{12}, message{14}).
-		Serialize(11, func(i interface{}) int {
+		Serialize(11, func(i any) int {
 			return i.(message).id
 		})
 	Assert(ctx, t, obs, HasItems(message{11}, message{12}, message{13}, message{14}, message{15}))
@@ -1825,7 +1825,7 @@ func Test_Observable_Serialize_ContextCanceled(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
-	obs := Never().Serialize(1, func(i interface{}) int {
+	obs := Never().Serialize(1, func(i any) int {
 		return i.(message).id
 	}, WithContext(ctx))
 	Assert(ctx, t, obs, IsEmpty(), HasNoError())
@@ -1836,7 +1836,7 @@ func Test_Observable_Serialize_Empty(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, message{3}, message{5}, message{7}, message{2}, message{4}).
-		Serialize(1, func(i interface{}) int {
+		Serialize(1, func(i any) int {
 			return i.(message).id
 		})
 	Assert(ctx, t, obs, IsEmpty())
@@ -1847,7 +1847,7 @@ func Test_Observable_Serialize_Error(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, message{3}, message{1}, errFoo, message{2}, message{4}).
-		Serialize(1, func(i interface{}) int {
+		Serialize(1, func(i any) int {
 			return i.(message).id
 		})
 	Assert(ctx, t, obs, HasItems(message{1}), HasError(errFoo))
@@ -1889,7 +1889,7 @@ func Test_Observable_SkipWhile(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 3, 4, 5).SkipWhile(func(i interface{}) bool {
+	obs := testObservable(ctx, 1, 2, 3, 4, 5).SkipWhile(func(i any) bool {
 		switch i := i.(type) {
 		case int:
 			return i != 3
@@ -1905,7 +1905,7 @@ func Test_Observable_SkipWhile_Parallel(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 3, 4, 5).SkipWhile(func(i interface{}) bool {
+	obs := testObservable(ctx, 1, 2, 3, 4, 5).SkipWhile(func(i any) bool {
 		switch i := i.(type) {
 		case int:
 			return i != 3
@@ -2043,7 +2043,7 @@ func Test_Observable_Take_Interval(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := Interval(WithDuration(time.Nanosecond), WithContext(ctx)).Take(3)
-	Assert(ctx, t, obs, CustomPredicate(func(items []interface{}) error {
+	Assert(ctx, t, obs, CustomPredicate(func(items []any) error {
 		if len(items) != 3 {
 			return errors.New("3 items are expected")
 		}
@@ -2079,7 +2079,7 @@ func Test_Observable_TakeUntil(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 3, 4, 5).TakeUntil(func(item interface{}) bool {
+	obs := testObservable(ctx, 1, 2, 3, 4, 5).TakeUntil(func(item any) bool {
 		return item == 3
 	})
 	Assert(ctx, t, obs, HasItems(1, 2, 3))
@@ -2089,7 +2089,7 @@ func Test_Observable_TakeWhile(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 1, 2, 3, 4, 5).TakeWhile(func(item interface{}) bool {
+	obs := testObservable(ctx, 1, 2, 3, 4, 5).TakeWhile(func(item any) bool {
 		return item != 3
 	})
 	Assert(ctx, t, obs, HasItems(1, 2))
@@ -2100,7 +2100,7 @@ func Test_Observable_TimeInterval(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, 1, 2, 3).TimeInterval()
-	Assert(ctx, t, obs, CustomPredicate(func(items []interface{}) error {
+	Assert(ctx, t, obs, CustomPredicate(func(items []any) error {
 		if len(items) != 3 {
 			return fmt.Errorf("expected 3 items, got %d items", len(items))
 		}
@@ -2135,7 +2135,7 @@ func Test_Observable_ToMap(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	obs := testObservable(ctx, 3, 4, 5, true, false).ToMap(func(_ context.Context, i interface{}) (interface{}, error) {
+	obs := testObservable(ctx, 3, 4, 5, true, false).ToMap(func(_ context.Context, i any) (any, error) {
 		switch v := i.(type) {
 		case int:
 			return v, nil
@@ -2148,7 +2148,7 @@ func Test_Observable_ToMap(t *testing.T) {
 			return i, nil
 		}
 	})
-	Assert(ctx, t, obs, HasItem(map[interface{}]interface{}{
+	Assert(ctx, t, obs, HasItem(map[any]any{
 		3: 3,
 		4: 4,
 		5: 5,
@@ -2161,7 +2161,7 @@ func Test_Observable_ToMapWithValueSelector(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	keySelector := func(_ context.Context, i interface{}) (interface{}, error) {
+	keySelector := func(_ context.Context, i any) (any, error) {
 		switch v := i.(type) {
 		case int:
 			return v, nil
@@ -2174,7 +2174,7 @@ func Test_Observable_ToMapWithValueSelector(t *testing.T) {
 			return i, nil
 		}
 	}
-	valueSelector := func(_ context.Context, i interface{}) (interface{}, error) {
+	valueSelector := func(_ context.Context, i any) (any, error) {
 		switch v := i.(type) {
 		case int:
 			return v * 10, nil
@@ -2185,7 +2185,7 @@ func Test_Observable_ToMapWithValueSelector(t *testing.T) {
 		}
 	}
 	single := testObservable(ctx, 3, 4, 5, true, false).ToMapWithValueSelector(keySelector, valueSelector)
-	Assert(ctx, t, single, HasItem(map[interface{}]interface{}{
+	Assert(ctx, t, single, HasItem(map[any]any{
 		3: 30,
 		4: 40,
 		5: 50,
@@ -2199,7 +2199,7 @@ func Test_Observable_ToSlice(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	s, err := testObservable(ctx, 1, 2, 3).ToSlice(5)
-	assert.Equal(t, []interface{}{1, 2, 3}, s)
+	assert.Equal(t, []any{1, 2, 3}, s)
 	assert.Equal(t, 5, cap(s))
 	assert.NoError(t, err)
 }
@@ -2209,7 +2209,7 @@ func Test_Observable_ToSlice_Error(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	s, err := testObservable(ctx, 1, 2, errFoo, 3).ToSlice(0)
-	assert.Equal(t, []interface{}{1, 2}, s)
+	assert.Equal(t, []any{1, 2}, s)
 	assert.Equal(t, errFoo, err)
 }
 
@@ -2218,7 +2218,7 @@ func Test_Observable_Unmarshal(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, []byte(`{"id":1}`), []byte(`{"id":2}`)).Unmarshal(json.Unmarshal,
-		func() interface{} {
+		func() any {
 			return &testStruct{}
 		})
 	Assert(ctx, t, obs, HasItems(&testStruct{
@@ -2233,7 +2233,7 @@ func Test_Observable_Unmarshal_Error(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, []byte(`{"id":1`), []byte(`{"id":2}`)).Unmarshal(json.Unmarshal,
-		func() interface{} {
+		func() any {
 			return &testStruct{}
 		})
 	Assert(ctx, t, obs, HasAnError())
@@ -2244,7 +2244,7 @@ func Test_Observable_Unmarshal_Parallel(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, []byte(`{"id":1}`), []byte(`{"id":2}`)).Unmarshal(json.Unmarshal,
-		func() interface{} {
+		func() any {
 			return &testStruct{}
 		}, WithPool(1))
 	Assert(ctx, t, obs, HasItems(&testStruct{
@@ -2259,7 +2259,7 @@ func Test_Observable_Unmarshal_Parallel_Error(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	obs := testObservable(ctx, []byte(`{"id":1`), []byte(`{"id":2}`)).Unmarshal(json.Unmarshal,
-		func() interface{} {
+		func() any {
 			return &testStruct{}
 		}, WithCPUPool())
 	Assert(ctx, t, obs, HasAnError())
@@ -2346,7 +2346,7 @@ func Test_Observable_ZipFromObservable(t *testing.T) {
 	defer cancel()
 	obs1 := testObservable(ctx, 1, 2, 3)
 	obs2 := testObservable(ctx, 10, 20, 30)
-	zipper := func(_ context.Context, elem1, elem2 interface{}) (interface{}, error) {
+	zipper := func(_ context.Context, elem1, elem2 any) (any, error) {
 		switch v1 := elem1.(type) {
 		case int:
 			switch v2 := elem2.(type) {
@@ -2366,7 +2366,7 @@ func Test_Observable_ZipFromObservable_DifferentLength1(t *testing.T) {
 	defer cancel()
 	obs1 := testObservable(ctx, 1, 2, 3)
 	obs2 := testObservable(ctx, 10, 20)
-	zipper := func(_ context.Context, elem1, elem2 interface{}) (interface{}, error) {
+	zipper := func(_ context.Context, elem1, elem2 any) (any, error) {
 		switch v1 := elem1.(type) {
 		case int:
 			switch v2 := elem2.(type) {
@@ -2386,7 +2386,7 @@ func Test_Observable_ZipFromObservable_DifferentLength2(t *testing.T) {
 	defer cancel()
 	obs1 := testObservable(ctx, 1, 2)
 	obs2 := testObservable(ctx, 10, 20, 30)
-	zipper := func(_ context.Context, elem1, elem2 interface{}) (interface{}, error) {
+	zipper := func(_ context.Context, elem1, elem2 any) (any, error) {
 		switch v1 := elem1.(type) {
 		case int:
 			switch v2 := elem2.(type) {

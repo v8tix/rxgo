@@ -21,7 +21,7 @@ type Option interface {
 	getErrorStrategy() OnErrorStrategy
 	isConnectable() bool
 	isConnectOperation() bool
-	isSerialized() (bool, func(interface{}) int)
+	isSerialized() (bool, func(any) int)
 }
 
 type funcOption struct {
@@ -36,7 +36,7 @@ type funcOption struct {
 	propagate            bool
 	connectable          bool
 	connectOperation     bool
-	serialized           func(interface{}) int
+	serialized           func(any) int
 }
 
 func (fdo *funcOption) toPropagate() bool {
@@ -93,7 +93,7 @@ func (fdo *funcOption) apply(do *funcOption) {
 	fdo.f(do)
 }
 
-func (fdo *funcOption) isSerialized() (bool, func(interface{}) int) {
+func (fdo *funcOption) isSerialized() (bool, func(any) int) {
 	if fdo.serialized == nil {
 		return false, nil
 	}
@@ -173,7 +173,7 @@ func WithPublishStrategy() Option {
 }
 
 // Serialize forces an Observable to make serialized calls and to be well-behaved.
-func Serialize(identifier func(interface{}) int) Option {
+func Serialize(identifier func(any) int) Option {
 	return newFuncOption(func(options *funcOption) {
 		options.serialized = identifier
 	})

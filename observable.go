@@ -30,7 +30,7 @@ type Observable interface {
 	Contains(equal Predicate, opts ...Option) Single
 	Count(opts ...Option) Single
 	Debounce(timespan Duration, opts ...Option) Observable
-	DefaultIfEmpty(defaultValue interface{}, opts ...Option) Observable
+	DefaultIfEmpty(defaultValue any, opts ...Option) Observable
 	Distinct(apply Func, opts ...Option) Observable
 	DistinctUntilChanged(apply Func, opts ...Option) Observable
 	DoOnCompleted(completedFunc CompletedFunc, opts ...Option) Disposed
@@ -42,22 +42,22 @@ type Observable interface {
 	Filter(apply Predicate, opts ...Option) Observable
 	Find(find Predicate, opts ...Option) OptionalSingle
 	First(opts ...Option) OptionalSingle
-	FirstOrDefault(defaultValue interface{}, opts ...Option) Single
+	FirstOrDefault(defaultValue any, opts ...Option) Single
 	FlatMap(apply ItemToObservable, opts ...Option) Observable
 	ForEach(nextFunc NextFunc, errFunc ErrFunc, completedFunc CompletedFunc, opts ...Option) Disposed
 	GroupBy(length int, distribution func(Item) int, opts ...Option) Observable
 	GroupByDynamic(distribution func(Item) string, opts ...Option) Observable
 	IgnoreElements(opts ...Option) Observable
-	Join(joiner Func2, right Observable, timeExtractor func(interface{}) time.Time, window Duration, opts ...Option) Observable
+	Join(joiner Func2, right Observable, timeExtractor func(any) time.Time, window Duration, opts ...Option) Observable
 	Last(opts ...Option) OptionalSingle
-	LastOrDefault(defaultValue interface{}, opts ...Option) Single
+	LastOrDefault(defaultValue any, opts ...Option) Single
 	Map(apply Func, opts ...Option) Observable
 	Marshal(marshaller Marshaller, opts ...Option) Observable
 	Max(comparator Comparator, opts ...Option) OptionalSingle
 	Min(comparator Comparator, opts ...Option) OptionalSingle
 	OnErrorResumeNext(resumeSequence ErrorToObservable, opts ...Option) Observable
 	OnErrorReturn(resumeFunc ErrorFunc, opts ...Option) Observable
-	OnErrorReturnItem(resume interface{}, opts ...Option) Observable
+	OnErrorReturnItem(resume any, opts ...Option) Observable
 	Reduce(apply Func2, opts ...Option) OptionalSingle
 	Repeat(count int64, frequency Duration, opts ...Option) Observable
 	Retry(count int, shouldRetry func(error) bool, opts ...Option) Observable
@@ -66,7 +66,7 @@ type Observable interface {
 	Scan(apply Func2, opts ...Option) Observable
 	SequenceEqual(iterable Iterable, opts ...Option) Single
 	Send(output chan<- Item, opts ...Option)
-	Serialize(from int, identifier func(interface{}) int, opts ...Option) Observable
+	Serialize(from int, identifier func(any) int, opts ...Option) Observable
 	Skip(nth uint, opts ...Option) Observable
 	SkipLast(nth uint, opts ...Option) Observable
 	SkipWhile(apply Predicate, opts ...Option) Observable
@@ -82,8 +82,8 @@ type Observable interface {
 	Timestamp(opts ...Option) Observable
 	ToMap(keySelector Func, opts ...Option) Single
 	ToMapWithValueSelector(keySelector, valueSelector Func, opts ...Option) Single
-	ToSlice(initialCapacity int, opts ...Option) ([]interface{}, error)
-	Unmarshal(unmarshaller Unmarshaller, factory func() interface{}, opts ...Option) Observable
+	ToSlice(initialCapacity int, opts ...Option) ([]any, error)
+	Unmarshal(unmarshaller Unmarshaller, factory func() any, opts ...Option) Observable
 	WindowWithCount(count int, opts ...Option) Observable
 	WindowWithTime(timespan Duration, opts ...Option) Observable
 	WindowWithTimeOrCount(timespan Duration, count int, opts ...Option) Observable
@@ -341,7 +341,7 @@ func runParallel(ctx context.Context, next chan Item, observe <-chan Item, opera
 	}
 
 	// Scatter
-	for i := 0; i < pool; i++ {
+	for range pool {
 		go func() {
 			op := operatorFactory()
 			stopped := false
@@ -383,7 +383,7 @@ func runParallel(ctx context.Context, next chan Item, observe <-chan Item, opera
 	}()
 }
 
-func runFirstItem(ctx context.Context, f func(interface{}) int, notif chan Item, observe <-chan Item, next chan Item, operatorFactory func() operator, option Option, opts ...Option) {
+func runFirstItem(ctx context.Context, f func(any) int, notif chan Item, observe <-chan Item, next chan Item, operatorFactory func() operator, option Option, opts ...Option) {
 	go func() {
 		op := operatorFactory()
 		stopped := false
@@ -420,15 +420,15 @@ func runFirstItem(ctx context.Context, f func(interface{}) int, notif chan Item,
 	}()
 }
 
-func (o *ObservableImpl) serialize(parent context.Context, fromCh chan Item, identifier func(interface{}) int, opts ...Option) Observable {
+func (o *ObservableImpl) serialize(parent context.Context, fromCh chan Item, identifier func(any) int, opts ...Option) Observable {
 	option := parseOptions(opts...)
 	next := option.buildChannel()
 
 	ctx := option.buildContext(parent)
-	minHeap := binaryheap.NewWith(func(a, b interface{}) int {
+	minHeap := binaryheap.NewWith(func(a, b any) int {
 		return a.(int) - b.(int)
 	})
-	items := make(map[int]interface{})
+	items := make(map[int]any)
 
 	var from int
 	var counter int64

@@ -235,14 +235,14 @@ func testConnectableSingle(t *testing.T, obs Observable) {
 	defer cancel()
 	eg, _ := errgroup.WithContext(ctx)
 
-	expected := []interface{}{1, 2, 3}
+	expected := []any{1, 2, 3}
 
 	nbConsumers := 3
 	wg := sync.WaitGroup{}
 	wg.Add(nbConsumers)
 	// Before Connect() is called we create multiple observers
 	// We check all observers receive the same items
-	for i := 0; i < nbConsumers; i++ {
+	for range nbConsumers {
 		eg.Go(func() error {
 			observer := obs.Observe(WithContext(ctx))
 			wg.Done()
@@ -263,7 +263,7 @@ func testConnectableSingle(t *testing.T, obs Observable) {
 }
 
 func testConnectableComposed(t *testing.T, obs Observable) {
-	obs = obs.Map(func(_ context.Context, i interface{}) (interface{}, error) {
+	obs = obs.Map(func(_ context.Context, i any) (any, error) {
 		return i.(int) + 1, nil
 	}, WithPublishStrategy())
 
@@ -271,14 +271,14 @@ func testConnectableComposed(t *testing.T, obs Observable) {
 	defer cancel()
 	eg, _ := errgroup.WithContext(ctx)
 
-	expected := []interface{}{2, 3, 4}
+	expected := []any{2, 3, 4}
 
 	nbConsumers := 3
 	wg := sync.WaitGroup{}
 	wg.Add(nbConsumers)
 	// Before Connect() is called we create multiple observers
 	// We check all observers receive the same items
-	for i := 0; i < nbConsumers; i++ {
+	for range nbConsumers {
 		eg.Go(func() error {
 			observer := obs.Observe(WithContext(ctx))
 			wg.Done()

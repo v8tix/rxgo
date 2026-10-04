@@ -1,3 +1,4 @@
+//go:build !all
 // +build !all
 
 package rxgo
@@ -28,7 +29,7 @@ func TestLeak(t *testing.T) {
 			return Amb([]Observable{obs}, WithContext(ctx))
 		},
 		"CombineLatest": func(ctx context.Context) Observable {
-			return CombineLatest(func(i ...interface{}) interface{} {
+			return CombineLatest(func(i ...any) any {
 				sum := 0
 				for _, v := range i {
 					if v == nil {
@@ -58,7 +59,7 @@ func TestLeak(t *testing.T) {
 
 	actions := map[string]func(context.Context, Observable){
 		"All": func(ctx context.Context, obs Observable) {
-			obs.All(func(_ interface{}) bool {
+			obs.All(func(_ any) bool {
 				return true
 			}, WithContext(ctx))
 		},
@@ -72,19 +73,19 @@ func TestLeak(t *testing.T) {
 			obs.Connect(ctx)
 		},
 		"Contains": func(ctx context.Context, obs Observable) {
-			obs.Contains(func(i interface{}) bool {
+			obs.Contains(func(i any) bool {
 				return i == 2
 			}, WithContext(ctx))
 		},
 		"For each": func(_ context.Context, obs Observable) {
-			obs.ForEach(func(_ interface{}) {}, func(_ error) {}, func() {})
+			obs.ForEach(func(_ any) {}, func(_ error) {}, func() {})
 		},
 	}
 
 	defer goleak.VerifyNone(t)
 	for testObservable, factory := range observables {
 		for testAction, action := range actions {
-			for i := 0; i < count; i++ {
+			for range count {
 				waitTime := randomTime()
 				factory := factory
 				action := action
@@ -98,7 +99,7 @@ func TestLeak(t *testing.T) {
 					t.Parallel()
 					ctx, cancel := context.WithTimeout(context.Background(), waitTime)
 					defer cancel()
-					action(ctx, factory(ctx).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+					action(ctx, factory(ctx).Map(func(_ context.Context, i any) (any, error) {
 						return i, nil
 					}))
 				})
@@ -106,7 +107,7 @@ func TestLeak(t *testing.T) {
 					t.Parallel()
 					ctx, cancel := context.WithTimeout(context.Background(), waitTime)
 					defer cancel()
-					action(ctx, factory(ctx).Map(func(_ context.Context, i interface{}) (interface{}, error) {
+					action(ctx, factory(ctx).Map(func(_ context.Context, i any) (any, error) {
 						return nil, fooErr
 					}))
 				})

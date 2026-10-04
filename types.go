@@ -12,25 +12,25 @@ type (
 	// - 0 if two elements are equals
 	// - A negative value if the first argument is less than the second
 	// - A positive value if the first argument is greater than the second
-	Comparator func(interface{}, interface{}) int
+	Comparator func(any, any) int
 	// ItemToObservable defines a function that computes an observable from an item.
 	ItemToObservable func(Item) Observable
 	// ErrorToObservable defines a function that transforms an observable from an error.
 	ErrorToObservable func(error) Observable
 	// Func defines a function that computes a value from an input value.
-	Func func(context.Context, interface{}) (interface{}, error)
+	Func func(context.Context, any) (any, error)
 	// Func2 defines a function that computes a value from two input values.
-	Func2 func(context.Context, interface{}, interface{}) (interface{}, error)
+	Func2 func(context.Context, any, any) (any, error)
 	// FuncN defines a function that computes a value from N input values.
-	FuncN func(...interface{}) interface{}
+	FuncN func(...any) any
 	// ErrorFunc defines a function that computes a value from an error.
-	ErrorFunc func(error) interface{}
+	ErrorFunc func(error) any
 	// Predicate defines a func that returns a bool from an input value.
-	Predicate func(interface{}) bool
+	Predicate func(any) bool
 	// Marshaller defines a marshaller type (interface{} to []byte).
-	Marshaller func(interface{}) ([]byte, error)
+	Marshaller func(any) ([]byte, error)
 	// Unmarshaller defines an unmarshaller type ([]byte to interface).
-	Unmarshaller func([]byte, interface{}) error
+	Unmarshaller func([]byte, any) error
 	// Producer defines a producer implementation.
 	Producer func(ctx context.Context, next chan<- Item)
 	// Supplier defines a function that supplies a result from nothing.
@@ -41,7 +41,7 @@ type (
 	Disposable context.CancelFunc
 
 	// NextFunc handles a next item in a stream.
-	NextFunc func(interface{})
+	NextFunc func(any)
 	// ErrFunc handles an error in a stream.
 	ErrFunc func(error)
 	// CompletedFunc handles the end of a stream.

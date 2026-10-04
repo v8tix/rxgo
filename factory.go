@@ -70,8 +70,8 @@ func CombineLatest(f FuncN, observables []Observable, opts ...Option) Observable
 
 	go func() {
 		size := uint32(len(observables))
-		var counter uint32
-		s := make([]interface{}, size)
+		var counter atomic.Uint32
+		s := make([]any, size)
 		mutex := sync.Mutex{}
 		wg := sync.WaitGroup{}
 		wg.Add(int(size))
@@ -94,11 +94,11 @@ func CombineLatest(f FuncN, observables []Observable, opts ...Option) Observable
 						return
 					}
 					if s[i] == nil {
-						atomic.AddUint32(&counter, 1)
+						counter.Add(1)
 					}
 					mutex.Lock()
 					s[i] = item.V
-					if atomic.LoadUint32(&counter) == size {
+					if counter.Load() == size {
 						next <- Of(f(s...))
 					}
 					mutex.Unlock()
@@ -231,7 +231,7 @@ func Interval(interval Duration, opts ...Option) Observable {
 }
 
 // Just creates an Observable with the provided items.
-func Just(items ...interface{}) func(opts ...Option) Observable {
+func Just(items ...any) func(opts ...Option) Observable {
 	return func(opts ...Option) Observable {
 		return &ObservableImpl{
 			iterable: newJustIterable(items...)(opts...),
@@ -240,7 +240,7 @@ func Just(items ...interface{}) func(opts ...Option) Observable {
 }
 
 // JustItem creates a single from one item.
-func JustItem(item interface{}, opts ...Option) Single {
+func JustItem(item any, opts ...Option) Single {
 	return &SingleImpl{
 		iterable: newJustIterable(item)(opts...),
 	}

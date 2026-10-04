@@ -1,11 +1,11 @@
 package rxgo
 
 type justIterable struct {
-	items []interface{}
+	items []any
 	opts  []Option
 }
 
-func newJustIterable(items ...interface{}) func(opts ...Option) Iterable {
+func newJustIterable(items ...any) func(opts ...Option) Iterable {
 	return func(opts ...Option) Iterable {
 		return &justIterable{
 			items: items,

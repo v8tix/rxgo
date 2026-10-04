@@ -14,7 +14,7 @@ var (
 	errBar = errors.New("bar")
 )
 
-func channelValue(ctx context.Context, items ...interface{}) chan Item {
+func channelValue(ctx context.Context, items ...any) chan Item {
 	next := make(chan Item)
 	go func() {
 		for _, item := range items {
@@ -30,6 +30,6 @@ func channelValue(ctx context.Context, items ...interface{}) chan Item {
 	return next
 }
 
-func testObservable(ctx context.Context, items ...interface{}) Observable {
+func testObservable(ctx context.Context, items ...any) Observable {
 	return FromChannel(channelValue(ctx, items...))
 }
