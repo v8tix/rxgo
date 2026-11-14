@@ -25,8 +25,7 @@ no-dirty:
 audit: test
 	go mod tidy -diff
 	go mod verify
-	go mod vendor && git diff --exit-code -- vendor go.mod go.sum
-	test -z "$$(gofmt -l $$(git ls-files '*.go' ':!vendor/'))"
+	test -z "$$(gofmt -l $$(git ls-files '*.go'))"
 	go vet ./...
 	go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-U1000 ./...
 	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
@@ -63,11 +62,10 @@ upgradeable:
 # DEVELOPMENT
 # ====================================================================================
 
-## tidy: tidy modfiles, refresh vendor/, modernize and format the .go files
+## tidy: tidy modfiles, modernize and format the .go files
 .PHONY: tidy
 tidy:
 	go mod tidy -v
-	go mod vendor
 	go fix ./...
 	go fmt ./...
 
